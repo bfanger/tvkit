@@ -6,6 +6,7 @@ specifiers:
   '@typescript-eslint/eslint-plugin': ^5.49.0
   '@typescript-eslint/parser': ^5.49.0
   concurrently: ^7.6.0
+  core-js: ^3.27.2
   esbuild: ^0.17.4
   eslint: ^8.32.0
   eslint-config-airbnb-base: ^15.0.0
@@ -21,15 +22,18 @@ specifiers:
   husky: ^8.0.3
   node-html-parser: ^6.1.4
   prettier: ^2.8.3
+  regenerator-runtime: ^0.13.11
   systemjs: ^6.13.0
   typescript: ^4.9.4
 
 dependencies:
   '@babel/standalone': 7.20.13
+  core-js: 3.27.2
   esbuild: 0.17.4
   express: 4.18.2
   http-proxy-middleware: 2.0.6_@types+express@4.17.16
   node-html-parser: 6.1.4
+  regenerator-runtime: 0.13.11
   systemjs: 6.13.0
 
 devDependencies:
@@ -736,6 +740,11 @@ packages:
   /cookie/0.5.0:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
     engines: {node: '>= 0.6'}
+    dev: false
+
+  /core-js/3.27.2:
+    resolution: {integrity: sha512-9ashVQskuh5AZEZ1JdQWp1GqSoC1e1G87MzRqg2gIfVAQ7Qn9K+uFj8EcniUFA4P2NLZfV+TOlX1SzoKfo+s7w==}
+    requiresBuild: true
     dev: false
 
   /cross-spawn/7.0.3:
@@ -2208,6 +2217,10 @@ packages:
       http-errors: 2.0.0
       iconv-lite: 0.4.24
       unpipe: 1.0.0
+    dev: false
+
+  /regenerator-runtime/0.13.11:
+    resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
     dev: false
 
   /regexp.prototype.flags/1.4.3:

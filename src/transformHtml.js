@@ -8,11 +8,12 @@ export default function transformHtml(source) {
   ast.querySelectorAll("script").forEach((node) => {
     node.setAttribute("type", "systemjs-module");
   });
-  ast
-    .querySelector("head")
-    ?.insertAdjacentHTML(
-      "afterbegin",
-      '<script src="/tvkit-system.js"></script>'
-    );
+  ast.querySelector("head")?.insertAdjacentHTML(
+    "afterbegin",
+    `
+    <script src="/tvkit-polyfills.js"></script>
+    <script src="/tvkit-system.js"></script>
+`
+  );
   return ast.toString();
 }
