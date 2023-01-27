@@ -1,9 +1,14 @@
 # TVKit
 
-## Goal
-
-Proxy to run a modern dev server in old browsers.
+A proxy server to run a modern dev server in old browsers.
 "Run SvelteKit on a TV"
+
+## Usage
+
+- Start your vite project
+- Make sure it is running on port 5173
+- Inside the tvkit dir run `node src/server.js`
+- Open http://localhost:3000/ to visit your project in an old non ESM browser
 
 ## Technology
 

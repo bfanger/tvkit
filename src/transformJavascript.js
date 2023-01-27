@@ -19,6 +19,11 @@ export default async function transformJavascript(source) {
       ],
     ],
   });
-  const code = result?.code ?? "console.error('transformJavascript failed');";
+  let code = result?.code ?? "console.error('transformJavascript failed');";
+  // Fix competing Symbol polyfills
+  code = code.replace(
+    'throw new TypeError("@@toPrimitive must return a primitive value.");',
+    ';if (typeof res === "object" && res[Symbol.toPrimitive]) { return res[Symbol.toPrimitive].toString() }; throw new TypeError("@@toPrimitive must return a primitive value.");'
+  );
   return code;
 }
