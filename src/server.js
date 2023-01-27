@@ -17,9 +17,10 @@ async function main() {
   app.disable("x-powered-by");
   const proxy = createProxyMiddleware({
     target: origin,
+    ws: true,
     selfHandleResponse: true,
     // changeOrigin: true,
-    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes) => {
+    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req) => {
       if (proxyRes.statusCode !== 200) {
         return responseBuffer;
       }
@@ -29,7 +30,21 @@ async function main() {
       if (
         proxyRes.headers["content-type"]?.startsWith("application/javascript")
       ) {
-        return transformJavascript(responseBuffer.toString("utf8"));
+        let code = responseBuffer.toString("utf8");
+        // @todo Detect browser support for custom elements?
+        if (req.url === "/@vite/client") {
+          code = code
+            .replace(
+              "class ErrorOverlay extends HTMLElement",
+              "class ErrorOverlay"
+            )
+            .replace("super();", "")
+            .replace(
+              "document.body.appendChild(new ErrorOverlay(err))",
+              "console.error(err.message + '\\n' + err.stack)"
+            );
+        }
+        return transformJavascript(code);
       }
       return responseBuffer;
     }),
@@ -49,10 +64,7 @@ async function main() {
     "/tvkit-polyfills.js",
     await fs.readFile("node_modules/tvkit-polyfills.js", "utf8")
   );
-  files.set(
-    "/@vite/client",
-    await transformJavascript(await fs.readFile("./src/viteClient.js", "utf8"))
-  );
+
   for (const url of files.keys()) {
     app.get(url, (_, res) => {
       const mimetype = url.endsWith(".map")
