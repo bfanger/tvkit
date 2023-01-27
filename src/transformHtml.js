@@ -8,9 +8,12 @@ export default async function transformHtml(source) {
   const ast = parse(source);
   await Promise.all(
     ast.querySelectorAll("script").map(async (node) => {
+      if (node.getAttribute("type") !== "module") {
+        return;
+      }
       if (node.hasAttribute("src")) {
         node.setAttribute("type", "systemjs-module");
-      } else {
+      } else if (node.textContent.length > 0) {
         node.removeAttribute("type");
         const code = await transformJavascript(node.textContent);
         node.set_content(code);

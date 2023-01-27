@@ -3,15 +3,23 @@
 import "core-js/stable";
 import "regenerator-runtime";
 import "whatwg-fetch";
-import "element-remove";
 import "intersection-observer";
 import "unorm"; // @todo: Use a smaller non-spec-compliant polyfill?
+import "proxy-polyfill/proxy.min.js";
+// IE only?
+import "fast-text-encoding";
+import "custom-event-polyfill";
+import appendPolyfill from "cross-browser-polyfill/src/polyfills/element-append";
+import removePolyfill from "cross-browser-polyfill/src/polyfills/element-remove";
+
+appendPolyfill();
+removePolyfill();
 
 /**
  * SvelteKit specific polyfills
  */
 window.__SVELTEKIT_APP_VERSION_POLL_INTERVAL__ =
-  window.__SVELTEKIT_APP_VERSION_POLL_INTERVAL__ || 1000;
+  window.__SVELTEKIT_APP_VERSION_POLL_INTERVAL__ || 0;
 window.__SVELTEKIT_EMBEDDED__ = window.__SVELTEKIT_EMBEDDED__ || false;
 
 Error.prototype.stack = Error.prototype.stack || ""; // fix`new Error().stack` in fetcher.js

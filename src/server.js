@@ -20,6 +20,9 @@ async function main() {
     selfHandleResponse: true,
     // changeOrigin: true,
     onProxyRes: responseInterceptor(async (responseBuffer, proxyRes) => {
+      if (proxyRes.statusCode !== 200) {
+        return responseBuffer;
+      }
       if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
         return transformHtml(responseBuffer.toString("utf8"));
       }
@@ -35,7 +38,11 @@ async function main() {
   const files = new Map();
   files.set(
     "/tvkit-system.js",
-    await fs.readFile("node_modules/systemjs/dist/system.js", "utf8")
+    await fs.readFile("node_modules/systemjs/dist/s.min.js", "utf8")
+  );
+  files.set(
+    "/s.min.js.map",
+    await fs.readFile("node_modules/systemjs/dist/s.min.js.map", "utf8")
   );
   await generatePolyfills();
   files.set(
@@ -48,7 +55,10 @@ async function main() {
   );
   for (const url of files.keys()) {
     app.get(url, (_, res) => {
-      res.setHeader("content-type", "application/javascript");
+      const mimetype = url.endsWith(".map")
+        ? "application/json"
+        : "application/javascript";
+      res.setHeader("content-type", mimetype);
       res.send(files.get(url));
     });
   }

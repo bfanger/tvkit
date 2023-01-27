@@ -9,7 +9,8 @@ specifiers:
   '@typescript-eslint/parser': ^5.49.0
   concurrently: ^7.6.0
   core-js: ^3.27.2
-  element-remove: ^1.0.4
+  cross-browser-polyfill: ^1.0.5
+  custom-event-polyfill: ^1.0.7
   esbuild: ^0.17.4
   eslint: ^8.32.0
   eslint-config-airbnb-base: ^15.0.0
@@ -21,11 +22,13 @@ specifiers:
   eslint-plugin-only-warn: ^1.1.0
   eslint-plugin-prettier: ^4.2.1
   express: ^4.18.2
+  fast-text-encoding: ^1.0.6
   http-proxy-middleware: ^2.0.6
   husky: ^8.0.3
   intersection-observer: ^0.12.2
   node-html-parser: ^6.1.4
   prettier: ^2.8.3
+  proxy-polyfill: ^0.3.2
   regenerator-runtime: ^0.13.11
   systemjs: ^6.13.0
   typescript: ^4.9.4
@@ -36,12 +39,15 @@ dependencies:
   '@babel/core': 7.20.12
   '@babel/preset-env': 7.20.2_@babel+core@7.20.12
   core-js: 3.27.2
-  element-remove: 1.0.4
+  cross-browser-polyfill: 1.0.5
+  custom-event-polyfill: 1.0.7
   esbuild: 0.17.4
   express: 4.18.2
+  fast-text-encoding: 1.0.6
   http-proxy-middleware: 2.0.6_@types+express@4.17.16
   intersection-observer: 0.12.2
   node-html-parser: 6.1.4
+  proxy-polyfill: 0.3.2
   regenerator-runtime: 0.13.11
   systemjs: 6.13.0
   unorm: 1.6.0
@@ -2053,6 +2059,10 @@ packages:
     requiresBuild: true
     dev: false
 
+  /cross-browser-polyfill/1.0.5:
+    resolution: {integrity: sha512-M7Hw8e23eNEfxkl2bXKyo+EphaHKL0Tf/66/0Sv7I5eLGE7Vzww2kSnOn+28CsoJrc9q1wxXUP4QES30hJYFQA==}
+    dev: false
+
   /cross-spawn/7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
     engines: {node: '>= 8'}
@@ -2075,6 +2085,10 @@ packages:
   /css-what/6.1.0:
     resolution: {integrity: sha512-HTUrgRJ7r4dsZKU6GjmpfRK1O76h97Z8MfS1G0FozR+oF2kG6Vfe8JE6zwrkbxigziPHinCJ+gCPjA9EaBDtRw==}
     engines: {node: '>= 6'}
+    dev: false
+
+  /custom-event-polyfill/1.0.7:
+    resolution: {integrity: sha512-TDDkd5DkaZxZFM8p+1I3yAlvM3rSr1wbrOliG4yJiwinMZN8z/iGL7BTlDkrJcYTmgUSb4ywVCc3ZaUtOtC76w==}
     dev: false
 
   /date-fns/2.29.3:
@@ -2196,10 +2210,6 @@ packages:
 
   /electron-to-chromium/1.4.284:
     resolution: {integrity: sha512-M8WEXFuKXMYMVr45fo8mq0wUrrJHheiKZf6BArTKk9ZBYCKJEOU5H8cdWgDT+qCVZf7Na4lVUaZsA+h6uA9+PA==}
-    dev: false
-
-  /element-remove/1.0.4:
-    resolution: {integrity: sha512-01T/lcLW4gkT+5xVsHTheEigd5S3q2NBZsIf9Tqm2iXP8OjtWqGZW3axzgZqlAO8s4SqvQvG2kePAtHUCSsgrg==}
     dev: false
 
   /emoji-regex/8.0.0:
@@ -2708,6 +2718,10 @@ packages:
   /fast-levenshtein/2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
     dev: true
+
+  /fast-text-encoding/1.0.6:
+    resolution: {integrity: sha512-VhXlQgj9ioXCqGstD37E/HBeqEGV/qOD/kmbVG8h5xKBYvM1L3lR1Zn4555cQ8GkYbJa8aJSipLPndE1k6zK2w==}
+    dev: false
 
   /fastq/1.15.0:
     resolution: {integrity: sha512-wBrocU2LCXXa+lWBt8RoIRD89Fi8OdABODa/kEnyeyjS5aZO5/GNvI5sEINADqP/h8M29UHTHUb53sUu5Ihqdw==}
@@ -3552,6 +3566,10 @@ packages:
     dependencies:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
+    dev: false
+
+  /proxy-polyfill/0.3.2:
+    resolution: {integrity: sha512-ENKSXOMCewnQTOyqrQXxEjIhzT6dy572mtehiItbDoIUF5Sv5UkmRUc8kowg2MFvr232Uo8rwRpNg3V5kgTKbA==}
     dev: false
 
   /punycode/2.3.0:
