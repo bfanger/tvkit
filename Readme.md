@@ -9,4 +9,4 @@ Proxy to run a modern dev server in old browsers.
 
 - Uses [SystemJS](https://github.com/systemjs/systemjs) to to polyfill ES modules.
 - Uses [Babel](https://babel.dev/) to transpile the modules on the fly.
-- Uses [core-js](https://github.com/zloirock/core-js) to polyfill missing features.
+- Uses [core-js](https://github.com/zloirock/core-js) and [whatwg-fetch](https://github.com/whatwg/fetch) to polyfill missing features.

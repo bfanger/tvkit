@@ -45,6 +45,7 @@
     "http-proxy-middleware": "^2.0.6",
     "node-html-parser": "^6.1.4",
     "regenerator-runtime": "^0.13.11",
-    "systemjs": "^6.13.0"
+    "systemjs": "^6.13.0",
+    "whatwg-fetch": "^3.6.2"
   }
 }

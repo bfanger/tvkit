@@ -13,51 +13,46 @@ const port = 3000;
 const origin = "http://localhost:5173";
 
 async function main() {
-  const files = new Map();
   const app = express();
   app.disable("x-powered-by");
   const proxy = createProxyMiddleware({
     target: origin,
     selfHandleResponse: true,
     // changeOrigin: true,
-    onProxyRes: responseInterceptor(
-      async (responseBuffer, proxyRes, req, res) => {
-        if (files.has(req.url)) {
-          res.statusCode = 200;
-          responseBuffer.toString("utf8");
-          return files.get(req.url);
-        }
-
-        if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
-          return transformHtml(responseBuffer.toString("utf8"));
-        }
-        if (
-          proxyRes.headers["content-type"]?.startsWith("application/javascript")
-        ) {
-          const code = await transformJavascript(
-            responseBuffer.toString("utf8")
-          );
-          if (req.url === "/@vite/client") {
-            return 'console.error("Vite dev is not supported in TVKit");)';
-          }
-          return code;
-        }
-        return responseBuffer;
+    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes) => {
+      if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
+        return transformHtml(responseBuffer.toString("utf8"));
       }
-    ),
+      if (
+        proxyRes.headers["content-type"]?.startsWith("application/javascript")
+      ) {
+        return transformJavascript(responseBuffer.toString("utf8"));
+      }
+      return responseBuffer;
+    }),
   });
 
-  app.use(proxy);
-
-  await generatePolyfills();
+  const files = new Map();
   files.set(
     "/tvkit-system.js",
     await fs.readFile("node_modules/systemjs/dist/system.js", "utf8")
   );
+  await generatePolyfills();
   files.set(
     "/tvkit-polyfills.js",
     await fs.readFile("node_modules/tvkit-polyfills.js", "utf8")
   );
+  files.set(
+    "/@vite/client",
+    await transformJavascript(await fs.readFile("./src/viteClient.js", "utf8"))
+  );
+  for (const url of files.keys()) {
+    app.get(url, (_, res) => {
+      res.setHeader("content-type", "application/javascript");
+      res.send(files.get(url));
+    });
+  }
+  app.use(proxy);
 
   app.listen(port, "0.0.0.0", () => {
     console.info(`http://localhost:${port}/`);

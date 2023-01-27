@@ -27,6 +27,7 @@ specifiers:
   regenerator-runtime: ^0.13.11
   systemjs: ^6.13.0
   typescript: ^4.9.4
+  whatwg-fetch: ^3.6.2
 
 dependencies:
   '@babel/core': 7.20.12
@@ -38,6 +39,7 @@ dependencies:
   node-html-parser: 6.1.4
   regenerator-runtime: 0.13.11
   systemjs: 6.13.0
+  whatwg-fetch: 3.6.2
 
 devDependencies:
   '@types/babel__core': 7.20.0
@@ -4018,6 +4020,10 @@ packages:
   /vary/1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
+    dev: false
+
+  /whatwg-fetch/3.6.2:
+    resolution: {integrity: sha512-bJlen0FcuU/0EMLrdbJ7zOnW6ITZLrZMIarMUVmdKtsGvZna8vxKYaexICWPfZ8qwf9fzNq+UEIZrnSaApt6RA==}
     dev: false
 
   /which-boxed-primitive/1.0.2:
