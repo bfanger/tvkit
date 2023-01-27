@@ -5,6 +5,7 @@ export function createHotContext() {
     accept() {},
     prune() {},
     dispose() {},
+    on() {},
   };
 }
 export function injectQuery(...args) {

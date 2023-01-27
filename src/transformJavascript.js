@@ -19,5 +19,6 @@ export default async function transformJavascript(source) {
       ],
     ],
   });
-  return result?.code ?? "console.error('transformJavascript failed');";
+  const code = result?.code ?? "console.error('transformJavascript failed');";
+  return code;
 }

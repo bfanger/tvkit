@@ -9,6 +9,7 @@ specifiers:
   '@typescript-eslint/parser': ^5.49.0
   concurrently: ^7.6.0
   core-js: ^3.27.2
+  element-remove: ^1.0.4
   esbuild: ^0.17.4
   eslint: ^8.32.0
   eslint-config-airbnb-base: ^15.0.0
@@ -22,23 +23,28 @@ specifiers:
   express: ^4.18.2
   http-proxy-middleware: ^2.0.6
   husky: ^8.0.3
+  intersection-observer: ^0.12.2
   node-html-parser: ^6.1.4
   prettier: ^2.8.3
   regenerator-runtime: ^0.13.11
   systemjs: ^6.13.0
   typescript: ^4.9.4
+  unorm: ^1.6.0
   whatwg-fetch: ^3.6.2
 
 dependencies:
   '@babel/core': 7.20.12
   '@babel/preset-env': 7.20.2_@babel+core@7.20.12
   core-js: 3.27.2
+  element-remove: 1.0.4
   esbuild: 0.17.4
   express: 4.18.2
   http-proxy-middleware: 2.0.6_@types+express@4.17.16
+  intersection-observer: 0.12.2
   node-html-parser: 6.1.4
   regenerator-runtime: 0.13.11
   systemjs: 6.13.0
+  unorm: 1.6.0
   whatwg-fetch: 3.6.2
 
 devDependencies:
@@ -2192,6 +2198,10 @@ packages:
     resolution: {integrity: sha512-M8WEXFuKXMYMVr45fo8mq0wUrrJHheiKZf6BArTKk9ZBYCKJEOU5H8cdWgDT+qCVZf7Na4lVUaZsA+h6uA9+PA==}
     dev: false
 
+  /element-remove/1.0.4:
+    resolution: {integrity: sha512-01T/lcLW4gkT+5xVsHTheEigd5S3q2NBZsIf9Tqm2iXP8OjtWqGZW3axzgZqlAO8s4SqvQvG2kePAtHUCSsgrg==}
+    dev: false
+
   /emoji-regex/8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
     dev: true
@@ -3055,6 +3065,10 @@ packages:
       has: 1.0.3
       side-channel: 1.0.4
     dev: true
+
+  /intersection-observer/0.12.2:
+    resolution: {integrity: sha512-7m1vEcPCxXYI8HqnL8CKI6siDyD+eIWSwgB3DZA+ZTogxk9I4CDnj4wilt9x/+/QbHI4YG5YZNmC6458/e9Ktg==}
+    dev: false
 
   /ipaddr.js/1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
@@ -3988,6 +4002,11 @@ packages:
   /unicode-property-aliases-ecmascript/2.1.0:
     resolution: {integrity: sha512-6t3foTQI9qne+OZoVQB/8x8rk2k1eVy1gRXhV3oFQ5T6R1dqQ1xtin3XqSlx3+ATBkliTaR/hHyJBm+LVPNM8w==}
     engines: {node: '>=4'}
+    dev: false
+
+  /unorm/1.6.0:
+    resolution: {integrity: sha512-b2/KCUlYZUeA7JFUuRJZPUtr4gZvBh7tavtv4fvk4+KV9pfGiR6CQAQAWl49ZpR3ts2dk4FYkP7EIgDJoiOLDA==}
+    engines: {node: '>= 0.4.0'}
     dev: false
 
   /unpipe/1.0.0:
