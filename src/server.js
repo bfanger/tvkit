@@ -28,11 +28,19 @@ async function main() {
           return files.get(req.url);
         }
 
-        if (proxyRes.headers["content-type"] === "text/html") {
+        if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
           return transformHtml(responseBuffer.toString("utf8"));
         }
-        if (proxyRes.headers["content-type"] === "application/javascript") {
-          return transformJavascript(responseBuffer.toString("utf8"));
+        if (
+          proxyRes.headers["content-type"]?.startsWith("application/javascript")
+        ) {
+          const code = await transformJavascript(
+            responseBuffer.toString("utf8")
+          );
+          if (req.url === "/@vite/client") {
+            return 'console.error("Vite dev is not supported in TVKit");)';
+          }
+          return code;
         }
         return responseBuffer;
       }
@@ -44,7 +52,7 @@ async function main() {
   await generatePolyfills();
   files.set(
     "/tvkit-system.js",
-    await fs.readFile("node_modules/systemjs/dist/system.min.js", "utf8")
+    await fs.readFile("node_modules/systemjs/dist/system.js", "utf8")
   );
   files.set(
     "/tvkit-polyfills.js",

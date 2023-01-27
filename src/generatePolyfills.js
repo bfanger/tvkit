@@ -5,7 +5,7 @@ export default async function generatePolyfills() {
     entryPoints: ["src/polyfills.js"],
     bundle: true,
     format: "iife",
-    target: "es2015",
+    target: "ie11",
     outfile: "node_modules/tvkit-polyfills.js", // generating into the node_modules folder prevents pm2 from restarting.
   });
 }

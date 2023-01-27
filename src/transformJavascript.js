@@ -1,11 +1,23 @@
-import Babel from "@babel/standalone";
-
+import { transformAsync } from "@babel/core";
 /**
  * @param {string} source
- * @returns {string}
+ * @returns {Promise<string>}
  */
-export default function transformJavascript(source) {
-  return Babel.transform(source, {
-    presets: [["env", { modules: "systemjs", targets: ["ie 11"] }]],
-  }).code;
+export default async function transformJavascript(source) {
+  const result = await transformAsync(source, {
+    configFile: false,
+    presets: [
+      [
+        "@babel/preset-env",
+        {
+          modules: "systemjs",
+          corejs: { version: 3 },
+          useBuiltIns: "entry",
+          targets: ["ie 11"],
+          spec: true,
+        },
+      ],
+    ],
+  });
+  return result?.code ?? "console.error('transformJavascript failed');";
 }
