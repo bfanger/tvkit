@@ -1,11 +1,19 @@
+/* eslint-disable no-template-curly-in-string */
 import { transformAsync } from "@babel/core";
 /**
  * @param {string} source
  * @returns {Promise<string>}
  */
 export default async function transformJavascript(source) {
-  const result = await transformAsync(source, {
+  // Fix "SyntaxError: DOM Exception 12" on very old webkit versions
+  // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
+  const preprocessed = source.replace(
+    ".insertRule(`@keyframes ${name} ${rule}`",
+    ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
+  );
+  const result = await transformAsync(preprocessed, {
     configFile: false,
+    compact: false,
     presets: [
       [
         "@babel/preset-env",
