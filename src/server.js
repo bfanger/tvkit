@@ -7,10 +7,13 @@ import {
 } from "http-proxy-middleware";
 import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
+import transformCss from "./transformCss.js";
 import generatePolyfills from "./generatePolyfills.js";
 
 const port = 3000;
 const origin = "http://localhost:5173";
+const target = "ie 11";
+const css = true;
 
 async function main() {
   const app = express();
@@ -25,7 +28,7 @@ async function main() {
         return responseBuffer;
       }
       if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
-        return transformHtml(responseBuffer.toString("utf8"));
+        return transformHtml(responseBuffer.toString("utf8"), { css, target });
       }
       if (
         proxyRes.headers["content-type"]?.startsWith("application/javascript")
@@ -43,8 +46,25 @@ async function main() {
               "document.body.appendChild(new ErrorOverlay(err))",
               "console.error(err.message + '\\n' + err.stack)"
             );
+          if (css) {
+            // Add caching?
+            code = code.replace(
+              "function updateStyle(id, content) {",
+              `const updateStyleAsync = {};
+  async function updateStyle(id, content) {
+    const current = {}
+    updateStyleAsync[id] = current; 
+    const response = await fetch('/tvkit-postcss', {method: 'POST', body: content});
+    const css = await response.text();
+    if (updateStyleAsync[id] === current) {
+      updateStyleSync(id, css);
+    }
+  }
+  function updateStyleSync(id, content) {`
+            );
+          }
         }
-        return transformJavascript(code);
+        return transformJavascript(code, { target });
       }
       return responseBuffer;
     }),
@@ -72,6 +92,21 @@ async function main() {
         : "application/javascript";
       res.setHeader("content-type", mimetype);
       res.send(files.get(url));
+    });
+  }
+  if (css) {
+    const raw = express.raw({
+      inflate: true,
+      limit: "50mb",
+      type: () => true,
+    });
+    app.post("/tvkit-postcss", (req, res) => {
+      raw(req, res, async () => {
+        const code = req.body.toString("utf8");
+        res.send(
+          await transformCss(code, { target, from: "tvkit-postcss.css" })
+        );
+      });
     });
   }
   app.use(proxy);

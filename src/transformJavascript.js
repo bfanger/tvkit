@@ -2,9 +2,10 @@
 import { transformAsync } from "@babel/core";
 /**
  * @param {string} source
+ * @param {{ target: string }} opts
  * @returns {Promise<string>}
  */
-export default async function transformJavascript(source) {
+export default async function transformJavascript(source, opts) {
   // Fix "SyntaxError: DOM Exception 12" on very old webkit versions
   // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
   const preprocessed = source.replace(
@@ -21,7 +22,7 @@ export default async function transformJavascript(source) {
           modules: "systemjs",
           corejs: { version: 3 },
           useBuiltIns: "entry",
-          targets: ["ie 11"],
+          targets: [opts.target],
           spec: true,
         },
       ],

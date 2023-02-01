@@ -1,10 +1,12 @@
 import { parse } from "node-html-parser";
 import transformJavascript from "./transformJavascript.js";
+import transformCss from "./transformCss.js";
 
 /**
  * @param {string} source
+ * @param {{ target: string, css?: boolean }} opts
  */
-export default async function transformHtml(source) {
+export default async function transformHtml(source, { target, css }) {
   const ast = parse(source);
   await Promise.all(
     ast.querySelectorAll("script").map(async (node) => {
@@ -15,7 +17,9 @@ export default async function transformHtml(source) {
         node.setAttribute("type", "systemjs-module");
       } else if (node.textContent.length > 0) {
         node.removeAttribute("type");
-        const code = await transformJavascript(node.textContent);
+        const code = await transformJavascript(node.textContent, {
+          target,
+        });
         node.set_content(code);
       }
     })
@@ -27,5 +31,15 @@ export default async function transformHtml(source) {
     <script src="/tvkit-system.js"></script>
 `
   );
+  if (css) {
+    await Promise.all(
+      ast.querySelectorAll("style").map(async (node) => {
+        if (node.textContent.length > 0) {
+          const code = await transformCss(node.textContent, { target });
+          node.set_content(code);
+        }
+      })
+    );
+  }
   return ast.toString();
 }

@@ -48,6 +48,8 @@
     "http-proxy-middleware": "^2.0.6",
     "intersection-observer": "^0.12.2",
     "node-html-parser": "^6.1.4",
+    "postcss": "^8.4.21",
+    "postcss-preset-env": "^8.0.1",
     "proxy-polyfill": "^0.3.2",
     "regenerator-runtime": "^0.13.11",
     "systemjs": "^6.13.0",
