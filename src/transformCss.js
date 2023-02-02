@@ -6,15 +6,15 @@ const processors = {};
 
 /**
  * @param {string} css
- * @param {{ target: string, from?: string }} opts
+ * @param {{  browser: string, from?: string }} opts
  */
-export default async function transformCss(css, { target, from }) {
-  if (!processors[target]) {
-    processors[target] = postcss([
-      postcssPresetEnv({ browsers: [target], autoprefixer: { grid: true } }),
+export default async function transformCss(css, { browser, from }) {
+  if (!processors[browser]) {
+    processors[browser] = postcss([
+      postcssPresetEnv({ browsers: [browser], autoprefixer: { grid: true } }),
     ]);
   }
-  const result = await processors[target].process(css, {
+  const result = await processors[browser].process(css, {
     from,
   });
   return result.css;

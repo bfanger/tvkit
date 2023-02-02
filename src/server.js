@@ -11,26 +11,29 @@ import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
 import generatePolyfills from "./generatePolyfills.js";
 
-const port = 3000;
-const origin = "http://localhost:5173";
-const target = "ie 11";
-const css = true;
+const port = process.env.PORT ?? 3000;
+const target = process.env.TARGET ?? "http://localhost:5173";
+const browser = process.env.BROWSER ?? "ie 11";
+const css =
+  typeof process.env.CSS !== "undefined" ? bool(process.env.CSS) : true;
 
+console.info("tvkit", { port, target, browser, css });
 async function main() {
   const app = express();
   app.disable("x-powered-by");
   const proxy = createProxyMiddleware({
-    target: origin,
+    target,
     ws: true,
     selfHandleResponse: true,
     // changeOrigin: true,
+    secure: false,
     onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req) => {
       if (proxyRes.statusCode !== 200) {
         return responseBuffer;
       }
       if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
         const content = responseBuffer.toString("utf8");
-        return cache(content, () => transformHtml(content, { css, target }));
+        return cache(content, () => transformHtml(content, { css, browser }));
       }
       if (
         proxyRes.headers["content-type"]?.startsWith("application/javascript")
@@ -68,7 +71,7 @@ async function main() {
               );
             }
           }
-          return transformJavascript(code, { target });
+          return transformJavascript(code, { browser });
         });
       }
       return responseBuffer;
@@ -84,7 +87,7 @@ async function main() {
     "/s.min.js.map",
     await fs.readFile("node_modules/systemjs/dist/s.min.js.map", "utf8")
   );
-  await generatePolyfills();
+  await generatePolyfills(browser);
   files.set(
     "/tvkit-polyfills.js",
     await fs.readFile("node_modules/tvkit-polyfills.js", "utf8")
@@ -109,7 +112,7 @@ async function main() {
       raw(req, res, async () => {
         const code = req.body.toString("utf8");
         const body = await cache(code, () =>
-          transformCss(code, { target, from: "tvkit-postcss.css" })
+          transformCss(code, { browser, from: "tvkit-postcss.css" })
         );
         res.send(body);
       });
@@ -143,4 +146,18 @@ async function cache(content, transformer) {
     }, 180_000 * Math.random() + 120_000);
   }
   return inMemoryCache[key];
+}
+
+/**
+ * @param {string} value
+ */
+function bool(value) {
+  const number = parseInt(value, 10);
+  if (number === 0) {
+    return false;
+  }
+  if (number === 1) {
+    return true;
+  }
+  return value.toLowerCase() === "true";
 }

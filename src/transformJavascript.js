@@ -2,7 +2,7 @@
 import { transformAsync } from "@babel/core";
 /**
  * @param {string} source
- * @param {{ target: string }} opts
+ * @param {{ browser: string }} opts
  * @returns {Promise<string>}
  */
 export default async function transformJavascript(source, opts) {
@@ -22,7 +22,7 @@ export default async function transformJavascript(source, opts) {
           modules: "systemjs",
           corejs: { version: 3 },
           useBuiltIns: "entry",
-          targets: [opts.target],
+          targets: [opts.browser],
           spec: true,
         },
       ],
