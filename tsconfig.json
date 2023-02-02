@@ -10,6 +10,6 @@
     "allowSyntheticDefaultImports": true,
     "paths": {}
   },
-  "include": ["src/**/*", "types/**/*"],
+  "include": ["bin/*", "src/**/*", "types/**/*"],
   "exclude": []
 }

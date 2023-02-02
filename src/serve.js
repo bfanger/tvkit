@@ -6,20 +6,23 @@ import {
   createProxyMiddleware,
   responseInterceptor,
 } from "http-proxy-middleware";
+
 import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
 import generatePolyfills from "./generatePolyfills.js";
 import isSupported from "./isSupported.js";
 
-const port = process.env.PORT ?? 3000;
-const target = process.env.TARGET ?? "http://localhost:5173";
-const browser = process.env.BROWSER ?? "ie 11";
-const css =
-  typeof process.env.CSS !== "undefined" ? bool(process.env.CSS) : true;
-
-console.info("tvkit", { port, target, browser, css });
-async function main() {
+/**
+ * Start the proxy server
+ *
+ * @param {number} port http port for the proxy server
+ * @param {string} target url to proxy
+ * @param {string} browser browserslist compatible browser (@todo Detect from user agent?)
+ * @param {boolean} css Also transform css
+ */
+export default async function serve(port, target, browser, css) {
+  console.info("[TVKit]", { port, target, browser, css });
   const app = express();
   app.disable("x-powered-by");
   const proxy = createProxyMiddleware({
@@ -133,7 +136,6 @@ async function main() {
     console.info(`http://localhost:${port}/`);
   });
 }
-main();
 
 /**
  * @type {Record<string, string>}
@@ -155,18 +157,4 @@ async function cache(content, transformer) {
     }, 180_000 * Math.random() + 120_000);
   }
   return inMemoryCache[key];
-}
-
-/**
- * @param {string} value
- */
-function bool(value) {
-  const number = parseInt(value, 10);
-  if (number === 0) {
-    return false;
-  }
-  if (number === 1) {
-    return true;
-  }
-  return value.toLowerCase() === "true";
 }

@@ -1,9 +1,13 @@
 {
   "name": "tvkit",
-  "private": true,
+  "version": "0.5.0",
+  "license": "MIT",
   "type": "module",
+  "bin": {
+    "tvkit": "bin/tvkit.js"
+  },
   "scripts": {
-    "dev": " pm2-dev src/server.js",
+    "dev": "pm2-dev \"bin/tvkit.js serve\"",
     "lint": "concurrently -c \"#c596c7\",\"#3074c0\",\"#7c7cea\" --kill-others-on-fail \"npm:lint:*\"",
     "lint:prettier": "prettier --check --loglevel=warn src",
     "lint:tsc": "tsc --noEmit",
@@ -21,6 +25,7 @@
     "@types/babel__core": "^7.20.0",
     "@types/caniuse-lite": "^1.0.1",
     "@types/express": "^4.17.16",
+    "@types/yargs": "^17.0.22",
     "@typescript-eslint/eslint-plugin": "^5.49.0",
     "@typescript-eslint/parser": "^5.49.0",
     "concurrently": "^7.6.0",
@@ -57,6 +62,7 @@
     "regenerator-runtime": "^0.13.11",
     "systemjs": "^6.13.0",
     "unorm": "^1.6.0",
-    "whatwg-fetch": "^3.6.2"
+    "whatwg-fetch": "^3.6.2",
+    "yargs": "^17.6.2"
   }
 }
