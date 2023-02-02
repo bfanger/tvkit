@@ -6,7 +6,7 @@ const processors = {};
 
 /**
  * @param {string} css
- * @param {{  browser: string, from?: string }} opts
+ * @param {{  browser: string, from?: string }} options
  */
 export default async function transformCss(css, { browser, from }) {
   if (!processors[browser]) {

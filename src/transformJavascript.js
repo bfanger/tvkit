@@ -1,17 +1,20 @@
 /* eslint-disable no-template-curly-in-string */
 import { transformAsync } from "@babel/core";
+import isSupported from "./isSupported.js";
 /**
  * @param {string} source
- * @param {{ browser: string }} opts
+ * @param {{ browser: string }} options
  * @returns {Promise<string>}
  */
-export default async function transformJavascript(source, opts) {
+export default async function transformJavascript(source, { browser }) {
   // Fix "SyntaxError: DOM Exception 12" on very old webkit versions
   // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
   const preprocessed = source.replace(
     ".insertRule(`@keyframes ${name} ${rule}`",
     ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
   );
+  const esm = isSupported(["es6-module", "es6-module-dynamic-import"], browser);
+
   const result = await transformAsync(preprocessed, {
     configFile: false,
     compact: false,
@@ -19,10 +22,10 @@ export default async function transformJavascript(source, opts) {
       [
         "@babel/preset-env",
         {
-          modules: "systemjs",
+          modules: esm ? false : "systemjs",
           corejs: { version: 3 },
           useBuiltIns: "entry",
-          targets: [opts.browser],
+          targets: [browser],
           spec: true,
         },
       ],

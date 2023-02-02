@@ -10,6 +10,7 @@ import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
 import generatePolyfills from "./generatePolyfills.js";
+import isSupported from "./isSupported.js";
 
 const port = process.env.PORT ?? 3000;
 const target = process.env.TARGET ?? "http://localhost:5173";
@@ -40,31 +41,39 @@ async function main() {
       ) {
         let code = responseBuffer.toString("utf8");
         return cache(code, () => {
-          // @todo Detect browser support for custom elements?
           if (req.url === "/@vite/client") {
-            code = code
-              .replace(
-                "class ErrorOverlay extends HTMLElement",
-                "class ErrorOverlay"
-              )
-              .replace("super();", "")
-              .replace(
-                "document.body.appendChild(new ErrorOverlay(err))",
-                "console.error(err.message + '\\n' + err.stack)"
-              );
+            if (
+              isSupported(
+                ["custom-elements", "shadowdom", "css-variables"],
+                browser
+              ) === false
+            ) {
+              code = code
+                .replace(
+                  "class ErrorOverlay extends HTMLElement",
+                  "class ErrorOverlay"
+                )
+                .replace("super();", "")
+                .replace(
+                  "document.body.appendChild(new ErrorOverlay(err))",
+                  "console.error(err.message + '\\n' + err.stack)"
+                );
+            }
             if (css) {
-              // Add caching?
+              // Add client side  caching?, sessionStorage?
               code = code.replace(
                 "function updateStyle(id, content) {",
                 `const updateStyleAsync = {};
   async function updateStyle(id, content) {
-    updateStyleSync(id, css); // fast update (without postcss applied)
+    updateStyleSync(id, content); // fast update (without postcss applied)
     const current = {}
     updateStyleAsync[id] = current; 
-    const response = await fetch('/tvkit-postcss', {method: 'POST', body: content});
-    const css = await response.text();
-    if (updateStyleAsync[id] === current) {
-      updateStyleSync(id, css);
+    const response = await fetch('/tvkit-postcss', { method: 'POST', body: content, headers: { 'Content-Type': 'text/css' } });
+    if (response.ok) {
+      const css = await response.text();
+      if (updateStyleAsync[id] === current) {
+        updateStyleSync(id, css);
+      }
     }
   }
   function updateStyleSync(id, content) {`
