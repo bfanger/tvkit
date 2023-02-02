@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "fs/promises";
+import crypto from "crypto";
 import express from "express";
 import {
   createProxyMiddleware,
@@ -28,30 +29,33 @@ async function main() {
         return responseBuffer;
       }
       if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
-        return transformHtml(responseBuffer.toString("utf8"), { css, target });
+        const content = responseBuffer.toString("utf8");
+        return cache(content, () => transformHtml(content, { css, target }));
       }
       if (
         proxyRes.headers["content-type"]?.startsWith("application/javascript")
       ) {
         let code = responseBuffer.toString("utf8");
-        // @todo Detect browser support for custom elements?
-        if (req.url === "/@vite/client") {
-          code = code
-            .replace(
-              "class ErrorOverlay extends HTMLElement",
-              "class ErrorOverlay"
-            )
-            .replace("super();", "")
-            .replace(
-              "document.body.appendChild(new ErrorOverlay(err))",
-              "console.error(err.message + '\\n' + err.stack)"
-            );
-          if (css) {
-            // Add caching?
-            code = code.replace(
-              "function updateStyle(id, content) {",
-              `const updateStyleAsync = {};
+        return cache(code, () => {
+          // @todo Detect browser support for custom elements?
+          if (req.url === "/@vite/client") {
+            code = code
+              .replace(
+                "class ErrorOverlay extends HTMLElement",
+                "class ErrorOverlay"
+              )
+              .replace("super();", "")
+              .replace(
+                "document.body.appendChild(new ErrorOverlay(err))",
+                "console.error(err.message + '\\n' + err.stack)"
+              );
+            if (css) {
+              // Add caching?
+              code = code.replace(
+                "function updateStyle(id, content) {",
+                `const updateStyleAsync = {};
   async function updateStyle(id, content) {
+    updateStyleSync(id, css); // fast update (without postcss applied)
     const current = {}
     updateStyleAsync[id] = current; 
     const response = await fetch('/tvkit-postcss', {method: 'POST', body: content});
@@ -61,10 +65,11 @@ async function main() {
     }
   }
   function updateStyleSync(id, content) {`
-            );
+              );
+            }
           }
-        }
-        return transformJavascript(code, { target });
+          return transformJavascript(code, { target });
+        });
       }
       return responseBuffer;
     }),
@@ -103,9 +108,10 @@ async function main() {
     app.post("/tvkit-postcss", (req, res) => {
       raw(req, res, async () => {
         const code = req.body.toString("utf8");
-        res.send(
-          await transformCss(code, { target, from: "tvkit-postcss.css" })
+        const body = await cache(code, () =>
+          transformCss(code, { target, from: "tvkit-postcss.css" })
         );
+        res.send(body);
       });
     });
   }
@@ -116,3 +122,25 @@ async function main() {
   });
 }
 main();
+
+/**
+ * @type {Record<string, string>}
+ */
+const inMemoryCache = {};
+
+/**
+ * Cache the transformations for 2-5 minutes.
+ *
+ * @param {string} content
+ * @param {() => string|Promise<string>} transformer
+ */
+async function cache(content, transformer) {
+  const key = crypto.createHash("md5").update(content).digest("hex");
+  if (!inMemoryCache[key]) {
+    inMemoryCache[key] = await transformer();
+    setTimeout(() => {
+      delete inMemoryCache[key];
+    }, 180_000 * Math.random() + 120_000);
+  }
+  return inMemoryCache[key];
+}
