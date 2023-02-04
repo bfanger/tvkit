@@ -22,7 +22,7 @@ import isSupported from "./isSupported.js";
  * @param {boolean} css Also transform css
  */
 export default async function serve(port, target, browser, css) {
-  console.info("[TVKit]", { port, target, browser, css });
+  console.info("[tvkit]", { port, target, browser, css });
   const app = express();
   app.disable("x-powered-by");
   const proxy = createProxyMiddleware({
@@ -133,7 +133,7 @@ export default async function serve(port, target, browser, css) {
   app.use(proxy);
 
   app.listen(port, "0.0.0.0", () => {
-    console.info(`http://localhost:${port}/`);
+    console.info(`[tvkit] Running on http://localhost:${port}/`);
   });
 }
 
