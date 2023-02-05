@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import fs from "fs/promises";
 import crypto from "crypto";
 import express from "express";
@@ -18,7 +17,7 @@ import isSupported from "./isSupported.js";
  *
  * @param {number} port http port for the proxy server
  * @param {string} target url to proxy
- * @param {string} browser browserslist compatible browser (@todo Detect from user agent?)
+ * @param {string} browser browserslist compatible browser
  * @param {boolean} css Also transform css
  */
 export default async function serve(port, target, browser, css) {

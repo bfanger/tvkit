@@ -2,6 +2,7 @@
 import Yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import serve from "../src/serve.js";
+import build from "../src/build.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 Yargs(hideBin(process.argv))
@@ -36,5 +37,30 @@ Yargs(hideBin(process.argv))
       serve(argv.port, argv.target, argv.browser, argv.css);
     }
   )
+  .command(
+    "build [folder]",
+    "Transform build output",
+    (yargs) => {
+      yargs.positional("[folder]", {
+        type: "string",
+        describe: "Folder to transform",
+      });
+      yargs.option("browser", {
+        type: "string",
+        default: "ie 11",
+        describe: "The target platform",
+      });
+      yargs.option("css", {
+        type: "boolean",
+        default: true,
+        describe: "Use --no-css to disable transpiling CSS",
+      });
+    },
+    (argv) => {
+      // @ts-ignore
+      build(argv.folder, argv.browser, argv.css);
+    }
+  )
+
   .demandCommand()
   .help("help", "").argv;
