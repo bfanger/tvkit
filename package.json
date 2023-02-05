@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pm2-dev \"bin/tvkit.js serve\"",
+    "dev:latest": "pm2-dev \"bin/tvkit.js serve --browser='chrome 109'\"",
     "lint": "concurrently -c \"#c596c7\",\"#3074c0\",\"#7c7cea\" --kill-others-on-fail \"npm:lint:*\"",
     "lint:prettier": "prettier --check --loglevel=warn src",
     "lint:tsc": "tsc --noEmit",
@@ -48,6 +49,7 @@
     "browserslist": "^4.21.5",
     "caniuse-lite": "^1.0.30001450",
     "core-js": "^3.27.2",
+    "core-js-compat": "^3.27.2",
     "cross-browser-polyfill": "^1.0.5",
     "custom-event-polyfill": "^1.0.7",
     "esbuild": "^0.17.4",

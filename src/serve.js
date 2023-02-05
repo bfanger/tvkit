@@ -99,11 +99,7 @@ export default async function serve(port, target, browser, css) {
     "/s.min.js.map",
     await fs.readFile("node_modules/systemjs/dist/s.min.js.map", "utf8")
   );
-  await generatePolyfills(browser);
-  files.set(
-    "/tvkit-polyfills.js",
-    await fs.readFile("node_modules/tvkit-polyfills.js", "utf8")
-  );
+  files.set("/tvkit-polyfills.js", await generatePolyfills(browser));
 
   for (const url of files.keys()) {
     app.get(url, (_, res) => {

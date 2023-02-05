@@ -10,9 +10,7 @@ const processors = {};
  */
 export default async function transformCss(css, { browser, from }) {
   if (!processors[browser]) {
-    processors[browser] = postcss([
-      postcssPresetEnv({ browsers: [browser], autoprefixer: { grid: true } }),
-    ]);
+    processors[browser] = postcss([postcssPresetEnv({ browsers: [browser] })]);
   }
   const result = await processors[browser].process(css, {
     from,
