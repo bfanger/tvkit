@@ -6,10 +6,13 @@ import isSupported from "./isSupported.js";
 
 /**
  * @param {string} source
- * @param {{ browser: string, css?: boolean }} options
+ * @param {{ browsers: string[], css?: boolean }} options
  */
-export default async function transformHtml(source, { browser, css }) {
-  const esm = isSupported(["es6-module", "es6-module-dynamic-import"], browser);
+export default async function transformHtml(source, { browsers, css }) {
+  const esm = isSupported(
+    ["es6-module", "es6-module-dynamic-import"],
+    browsers
+  );
 
   const ast = parse(source);
   if (!esm) {
@@ -23,7 +26,7 @@ export default async function transformHtml(source, { browser, css }) {
         } else if (node.textContent.length > 0) {
           node.removeAttribute("type");
           const code = await transformJavascript(node.textContent, {
-            browser,
+            browsers,
           });
           node.set_content(code);
         }
@@ -47,7 +50,7 @@ export default async function transformHtml(source, { browser, css }) {
     await Promise.all(
       ast.querySelectorAll("style").map(async (node) => {
         if (node.textContent.length > 0) {
-          const code = await transformCss(node.textContent, { browser });
+          const code = await transformCss(node.textContent, { browsers });
           node.set_content(code);
         }
       })

@@ -8,6 +8,7 @@ import {
   responseInterceptor,
 } from "http-proxy-middleware";
 
+import browserslist from "browserslist";
 import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
@@ -23,7 +24,13 @@ import isSupported from "./isSupported.js";
  * @param {boolean} css Also transform css
  */
 export default async function serve(port, target, browser, css) {
-  console.info("[tvkit]", { port, target, browser, css });
+  const browsers = browserslist(browser);
+  console.info("[tvkit]", {
+    port,
+    target,
+    browsers,
+    css,
+  });
   const app = express();
   app.disable("x-powered-by");
   const proxy = createProxyMiddleware({
@@ -38,7 +45,7 @@ export default async function serve(port, target, browser, css) {
       }
       if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
         const content = responseBuffer.toString("utf8");
-        return cache(content, () => transformHtml(content, { css, browser }));
+        return cache(content, () => transformHtml(content, { css, browsers }));
       }
       if (
         proxyRes.headers["content-type"]?.startsWith("application/javascript")
@@ -49,7 +56,7 @@ export default async function serve(port, target, browser, css) {
             if (
               isSupported(
                 ["custom-elements", "shadowdom", "css-variables"],
-                browser
+                browsers
               ) === false
             ) {
               code = code
@@ -84,7 +91,7 @@ export default async function serve(port, target, browser, css) {
               );
             }
           }
-          return transformJavascript(code, { browser });
+          return transformJavascript(code, { browsers });
         });
       }
       return responseBuffer;
@@ -101,7 +108,7 @@ export default async function serve(port, target, browser, css) {
     "/s.min.js.map",
     await fs.readFile(require.resolve("systemjs/dist/s.min.js.map"), "utf8")
   );
-  files.set("/tvkit-polyfills.js", await generatePolyfills(browser));
+  files.set("/tvkit-polyfills.js", await generatePolyfills(browsers));
 
   for (const url of files.keys()) {
     app.get(url, (_, res) => {
@@ -122,7 +129,7 @@ export default async function serve(port, target, browser, css) {
       raw(req, res, async () => {
         const code = req.body.toString("utf8");
         const body = await cache(code, () =>
-          transformCss(code, { browser, from: "tvkit-postcss.css" })
+          transformCss(code, { browsers, from: "tvkit-postcss.css" })
         );
         res.send(body);
       });

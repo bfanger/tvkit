@@ -1,19 +1,17 @@
 // @ts-check
 import caniuse from "caniuse-lite";
-import browserslist from "browserslist";
 
 /**
  * @param {string|string[]} featureOrFeatures
- * @param {string} target
+ * @param {string[]} targets
  */
-export default function isSupported(featureOrFeatures, target) {
-  const browsers = browserslist(target);
+export default function isSupported(featureOrFeatures, targets) {
   if (Array.isArray(featureOrFeatures)) {
     return featureOrFeatures.every((feature) =>
-      featureIsSupported(feature, browsers)
+      featureIsSupported(feature, targets)
     );
   }
-  return featureIsSupported(featureOrFeatures, browsers);
+  return featureIsSupported(featureOrFeatures, targets);
 }
 
 /** @type {Record<string, Record<string, number>>} */

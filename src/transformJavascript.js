@@ -7,17 +7,20 @@ import isSupported from "./isSupported.js";
 
 /**
  * @param {string} source
- * @param {{ browser: string }} options
+ * @param {{ browsers: string[] }} options
  * @returns {Promise<string>}
  */
-export default async function transformJavascript(source, { browser }) {
+export default async function transformJavascript(source, { browsers }) {
   // Fix "SyntaxError: DOM Exception 12" on very old webkit versions
   // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
   const preprocessed = source.replace(
     ".insertRule(`@keyframes ${name} ${rule}`",
     ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
   );
-  const esm = isSupported(["es6-module", "es6-module-dynamic-import"], browser);
+  const esm = isSupported(
+    ["es6-module", "es6-module-dynamic-import"],
+    browsers
+  );
 
   const result = await transformAsync(preprocessed, {
     configFile: false,
@@ -30,7 +33,7 @@ export default async function transformJavascript(source, { browser }) {
           modules: esm ? false : "systemjs",
           corejs: { version: 3 },
           useBuiltIns: "entry",
-          targets: [browser],
+          targets: browsers,
           spec: true,
         },
       ],

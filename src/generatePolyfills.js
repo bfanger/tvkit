@@ -10,11 +10,14 @@ import isSupported from "./isSupported.js";
 const require = createRequire(import.meta.url);
 
 /**
- * @param {string} browser
+ * @param {string[]} targets
  * @returns {Promise<string>} javascript code
  */
-export default async function generatePolyfills(browser) {
-  const features = compat({ targets: browser, exclude: getExcludeList() }).list;
+export default async function generatePolyfills(targets) {
+  const features = compat({
+    targets,
+    exclude: getExcludeList(),
+  }).list;
 
   const imports = [];
   let code = "";
@@ -23,25 +26,25 @@ export default async function generatePolyfills(browser) {
       `import ${JSON.stringify(require.resolve(`core-js/modules/${feature}`))};`
     );
   }
-  if (!isSupported(["es6-generators", "async-functions"], browser)) {
+  if (!isSupported(["es6-generators", "async-functions"], targets)) {
     imports.push('import "regenerator-runtime";');
   }
-  if (!isSupported("fetch", browser)) {
+  if (!isSupported("fetch", targets)) {
     imports.push('import "whatwg-fetch";');
   }
-  if (!isSupported("intersectionobserver", browser)) {
+  if (!isSupported("intersectionobserver", targets)) {
     imports.push('import "intersection-observer";');
   }
-  if (!isSupported("proxy", browser)) {
+  if (!isSupported("proxy", targets)) {
     imports.push('import "proxy-polyfill/proxy.min.js";');
   }
-  if (!isSupported("textencoder", browser)) {
+  if (!isSupported("textencoder", targets)) {
     imports.push('import "fast-text-encoding";');
   }
-  if (!isSupported("customevent", browser) || isSupported("ie11", browser)) {
+  if (!isSupported("customevent", targets) || isSupported("ie11", targets)) {
     imports.push('import "custom-event-polyfill";');
   }
-  if (!isSupported("childnode-remove", browser)) {
+  if (!isSupported("childnode-remove", targets)) {
     imports.push(
       'import appendPolyfill from "cross-browser-polyfill/src/polyfills/element-append";'
     );
@@ -53,11 +56,11 @@ appendPolyfill();
 removePolyfill();
 `;
   }
-  if (!isSupported("normalize", browser)) {
+  if (!isSupported("normalize", targets)) {
     imports.push('import "unorm";'); // @todo: Use a smaller non-spec-compliant polyfl)?
   }
 
-  if (!isSupported("composedPath", browser)) {
+  if (!isSupported("composedPath", targets)) {
     code += `
 if (!Event.prototype.composedPath) {
   Event.prototype.composedPath = function composedPathPolyfill() {
@@ -91,7 +94,7 @@ if (typeof new Error().stack !== "string") {
 `;
 
   // Bundle the polyfills
-  const folder = await createFolder(browser);
+  const folder = await createFolder(targets);
   const entry = path.join(folder, "entry.js");
   await fs.writeFile(entry, `${imports.join("\n")}\n${code}`);
   const out = path.join(folder, "polyfills.js");
@@ -102,16 +105,16 @@ if (typeof new Error().stack !== "string") {
     bundle: true,
     minify: true,
     format: "iife",
-    target: browser.replace(" ", ""),
+    target: targets.map((target) => target.replace(" ", "")),
     outfile: out,
   });
   return fs.readFile(out, "utf8");
 }
 
 /**
- * @param {string} browser
+ * @param {string[]} browsers
  */
-async function createFolder(browser) {
+async function createFolder(browsers) {
   // generating into the node_modules folder prevents pm2 from restarting.
   const projectFolder = path.dirname(
     path.dirname(fileURLToPath(import.meta.url))
@@ -122,7 +125,10 @@ async function createFolder(browser) {
       : path.resolve(projectFolder, "node_modules/.tvkit");
 
   await fs.stat(tvkitFolder).catch(() => fs.mkdir(tvkitFolder));
-  const slug = browser.toLowerCase().replace(/[ .\\/]+/gm, "");
+  const slug = browsers
+    .join("_")
+    .toLowerCase()
+    .replace(/[ .\\/]+/gm, "");
   const folder = path.join(tvkitFolder, slug);
   await fs.stat(tvkitFolder).catch(() => fs.mkdir(tvkitFolder));
   await fs.stat(folder).catch(() => fs.mkdir(folder));

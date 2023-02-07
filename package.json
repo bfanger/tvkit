@@ -1,7 +1,12 @@
 {
   "name": "tvkit",
   "version": "0.6.3",
+  "description": "Proxy to run a modern dev server in old browsers",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bfanger/tvkit.git"
+  },
   "type": "module",
   "bin": {
     "tvkit": "bin/tvkit.js"
