@@ -1,7 +1,7 @@
 // @ts-check
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import * as terser from "terser";
 import generatePolyfills from "./generatePolyfills.js";
 import transformHtml from "./transformHtml.js";
@@ -40,19 +40,16 @@ export default async function build(
     fs.writeFile(path.resolve(out, "tvkit-polyfills.js"), code, "utf-8");
     console.info("✅", "tvkit-polyfills.js");
   });
-  const nodeModules = path.resolve(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "../node_modules/"
-  );
   const esm = isSupported(["es6-module", "es6-module-dynamic-import"], browser);
   if (!esm) {
+    const require = createRequire(import.meta.url);
     await fs.copyFile(
-      path.resolve(nodeModules, "systemjs/dist/s.min.js"),
+      require.resolve("systemjs/dist/s.min.js"),
       path.join(out, "tvkit-system.js")
     );
     console.info("⏩", "tvkit-system.js");
     await fs.copyFile(
-      path.resolve(nodeModules, "systemjs/dist/s.min.js"),
+      require.resolve("systemjs/dist/s.min.js"),
       path.join(out, "s.min.js.map")
     );
     console.info("⏩", "s.min.js.map");

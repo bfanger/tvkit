@@ -1,6 +1,6 @@
 {
   "name": "tvkit",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "MIT",
   "type": "module",
   "bin": {
