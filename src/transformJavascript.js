@@ -1,7 +1,10 @@
 // @ts-check
 /* eslint-disable no-template-curly-in-string */
+import path from "path";
+import { fileURLToPath } from "url";
 import { transformAsync } from "@babel/core";
 import isSupported from "./isSupported.js";
+
 /**
  * @param {string} source
  * @param {{ browser: string }} options
@@ -19,6 +22,7 @@ export default async function transformJavascript(source, { browser }) {
   const result = await transformAsync(preprocessed, {
     configFile: false,
     compact: false,
+    cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../"),
     presets: [
       [
         "@babel/preset-env",

@@ -39,7 +39,7 @@ Yargs(hideBin(process.argv))
   )
   .command(
     "build [folder]",
-    "Copy folder and transform files to targetted browser platform",
+    "Copy and transform files",
     (yargs) => {
       yargs.positional("[folder]", {
         type: "string",
@@ -62,8 +62,8 @@ Yargs(hideBin(process.argv))
       });
       yargs.option("minify", {
         type: "boolean",
-        default: false,
-        describe: "Use --minify apply minification",
+        default: true,
+        describe: "Use --no-minify to skip minification",
       });
       yargs.option("force", {
         type: "boolean",

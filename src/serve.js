@@ -1,6 +1,8 @@
 // @ts-check
 import fs from "fs/promises";
 import crypto from "crypto";
+import { fileURLToPath } from "url";
+import path from "path";
 import express from "express";
 import {
   createProxyMiddleware,
@@ -91,13 +93,20 @@ export default async function serve(port, target, browser, css) {
   });
 
   const files = new Map();
+  const dirname = path.dirname(fileURLToPath(import.meta.url));
   files.set(
     "/tvkit-system.js",
-    await fs.readFile("node_modules/systemjs/dist/s.min.js", "utf8")
+    await fs.readFile(
+      path.resolve(dirname, "../node_modules/systemjs/dist/s.min.js"),
+      "utf8"
+    )
   );
   files.set(
     "/s.min.js.map",
-    await fs.readFile("node_modules/systemjs/dist/s.min.js.map", "utf8")
+    await fs.readFile(
+      path.resolve(dirname, "../node_modules/systemjs/dist/s.min.js.map"),
+      "utf8"
+    )
   );
   files.set("/tvkit-polyfills.js", await generatePolyfills(browser));
 

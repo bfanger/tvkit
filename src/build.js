@@ -30,7 +30,12 @@ export default async function build(
     );
     process.exit(1);
   }
-  await processFolder(folder, out, { base: folder, browser, css, minify });
+  await processFolder(folder, out, {
+    base: path.resolve(folder),
+    browser,
+    css,
+    minify,
+  });
   await generatePolyfills(browser).then((code) => {
     fs.writeFile(path.resolve(out, "tvkit-polyfills.js"), code, "utf-8");
     console.info("✅", "tvkit-polyfills.js");
@@ -43,12 +48,12 @@ export default async function build(
   if (!esm) {
     await fs.copyFile(
       path.resolve(nodeModules, "systemjs/dist/s.min.js"),
-      path.join(folder, "tvkit-system.js")
+      path.join(out, "tvkit-system.js")
     );
     console.info("⏩", "tvkit-system.js");
     await fs.copyFile(
       path.resolve(nodeModules, "systemjs/dist/s.min.js"),
-      path.join(folder, "s.min.js.map")
+      path.join(out, "s.min.js.map")
     );
     console.info("⏩", "s.min.js.map");
   }
@@ -87,15 +92,11 @@ async function processFolder(folder, out, { base, browser, css, minify }) {
           if (!minify) {
             return code;
           }
-          return (
-            (
-              await terser.minify(code, {
-                ecma: 5,
-                safari10: true,
-                // compress: { dead_code: true, arrows: false },
-              })
-            ).code ?? code
-          );
+          const minified = await terser.minify(code, {
+            ecma: 5,
+            safari10: true,
+          });
+          return minified.code ?? code;
         });
       } else if (entry.endsWith(".html") || entry.endsWith(".htm")) {
         processFile(base, filepath, outpath, (source) =>

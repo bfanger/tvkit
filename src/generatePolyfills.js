@@ -91,8 +91,10 @@ if (typeof new Error().stack !== "string") {
   const entry = path.join(folder, "entry.js");
   await fs.writeFile(entry, `${imports.join("\n")}\n${code}`);
   const out = path.join(folder, "polyfills.js");
+  const dirname = path.dirname(fileURLToPath(import.meta.url));
   await esbuild.build({
     entryPoints: [entry],
+    absWorkingDir: path.resolve(dirname, "../"),
     bundle: true,
     minify: true,
     format: "iife",
