@@ -29,7 +29,7 @@ Yargs(hideBin(process.argv))
       yargs.option("css", {
         type: "boolean",
         default: true,
-        describe: "Use --no-css to disable transpiling CSS",
+        describe: "Use --no-css to skip transpiling CSS",
       });
     },
     (argv) => {
@@ -39,11 +39,16 @@ Yargs(hideBin(process.argv))
   )
   .command(
     "build [folder]",
-    "Transform build output",
+    "Copy folder and transform files to targetted browser platform",
     (yargs) => {
       yargs.positional("[folder]", {
         type: "string",
         describe: "Folder to transform",
+      });
+      yargs.option("out", {
+        type: "string",
+        describe: "The output folder",
+        demandOption: true,
       });
       yargs.option("browser", {
         type: "string",
@@ -53,12 +58,27 @@ Yargs(hideBin(process.argv))
       yargs.option("css", {
         type: "boolean",
         default: true,
-        describe: "Use --no-css to disable transpiling CSS",
+        describe: "Use --no-css to skip transpiling CSS",
+      });
+      yargs.option("minify", {
+        type: "boolean",
+        default: false,
+        describe: "Use --minify apply minification",
+      });
+      yargs.option("force", {
+        type: "boolean",
+        alias: "f",
+        default: false,
+        describe: "Overwrite output folder if it exists",
       });
     },
     (argv) => {
       // @ts-ignore
-      build(argv.folder, argv.browser, argv.css);
+      build(argv.folder, argv.out, argv.browser, {
+        css: argv.css,
+        minify: argv.minify,
+        force: argv.force,
+      });
     }
   )
 

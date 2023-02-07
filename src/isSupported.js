@@ -1,3 +1,4 @@
+// @ts-check
 import caniuse from "caniuse-lite";
 import browserslist from "browserslist";
 
@@ -15,6 +16,7 @@ export default function isSupported(featureOrFeatures, target) {
   return featureIsSupported(featureOrFeatures, browsers);
 }
 
+/** @type {Record<string, Record<string, number>>} */
 const supportMatrix = {
   // https://caniuse.com/mdn-javascript_builtins_string_normalize
   normalize: {

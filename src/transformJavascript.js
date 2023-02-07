@@ -1,3 +1,4 @@
+// @ts-check
 /* eslint-disable no-template-curly-in-string */
 import { transformAsync } from "@babel/core";
 import isSupported from "./isSupported.js";

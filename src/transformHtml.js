@@ -1,3 +1,4 @@
+// @ts-check
 import { parse } from "node-html-parser";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";

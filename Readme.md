@@ -5,7 +5,7 @@ A proxy server to use a modern dev server in old browsers.
 
 TVKit intercepts requests to the other webserver and makes them work in old browsers by injecting polyfills and compiles modern javascript and CSS to a code that is compatible with the older browser.
 
-## Usage
+## Usage (dev server)
 
 - Start your vite project as normal
 - Run `npx tvkit@latest serve` in another terminal
@@ -18,6 +18,12 @@ TVKit intercepts requests to the other webserver and makes them work in old brow
   | --browser | "ie 11"               | The transpilation target (uses browserslist)       |
   | --no-css  | false                 | Disable CSS transpilation                          |
   | --help    |                       | Show message per command. Ex: `tvkit serve --help` |
+
+## Usage (build)
+
+```sh
+npx tvkit@latest build path/to/build --out path/to/output
+```
 
 ## Technology
 

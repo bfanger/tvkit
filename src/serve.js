@@ -1,3 +1,4 @@
+// @ts-check
 import fs from "fs/promises";
 import crypto from "crypto";
 import express from "express";

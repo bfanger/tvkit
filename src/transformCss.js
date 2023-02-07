@@ -1,3 +1,4 @@
+// @ts-check
 import postcssPresetEnv from "postcss-preset-env";
 import postcss from "postcss";
 
