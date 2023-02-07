@@ -7,6 +7,8 @@ import * as esbuild from "esbuild";
 import compat from "core-js-compat";
 import isSupported from "./isSupported.js";
 
+const require = createRequire(import.meta.url);
+
 /**
  * @param {string} browser
  * @returns {Promise<string>} javascript code
@@ -17,7 +19,9 @@ export default async function generatePolyfills(browser) {
   const imports = [];
   let code = "";
   for (const feature of features) {
-    imports.push(`import "../../core-js/modules/${feature}"`);
+    imports.push(
+      `import ${JSON.stringify(require.resolve(`core-js/modules/${feature}`))};`
+    );
   }
   if (!isSupported(["es6-generators", "async-functions"], browser)) {
     imports.push('import "regenerator-runtime";');
@@ -109,10 +113,14 @@ if (typeof new Error().stack !== "string") {
  */
 async function createFolder(browser) {
   // generating into the node_modules folder prevents pm2 from restarting.
-  const tvkitFolder = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "../node_modules/.tvkit"
+  const projectFolder = path.dirname(
+    path.dirname(fileURLToPath(import.meta.url))
   );
+  const tvkitFolder =
+    path.basename(path.dirname(projectFolder)) === "node_modules"
+      ? path.resolve(projectFolder, "../.tvkit")
+      : path.resolve(projectFolder, "node_modules/.tvkit");
+
   await fs.stat(tvkitFolder).catch(() => fs.mkdir(tvkitFolder));
   const slug = browser.toLowerCase().replace(/[ .\\/]+/gm, "");
   const folder = path.join(tvkitFolder, slug);
@@ -135,7 +143,6 @@ function getExcludeList() {
     "web.dom-exception.stack",
     "web.immediate",
   ];
-  const require = createRequire(import.meta.url);
   const compatData = require("core-js-compat/data.json");
 
   for (const [feature, browsers] of Object.entries(compatData)) {
