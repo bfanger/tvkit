@@ -35,6 +35,7 @@ export default async function build(
   await processFolder(folder, out, {
     base: path.resolve(folder),
     browsers,
+    root: "",
     css,
     minify,
   });
@@ -64,9 +65,13 @@ export default async function build(
 /**
  * @param {string} folder
  * @param {string} out
- * @param {{base: string, browsers: string[], css: boolean, minify: boolean}} options
+ * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean}} options
  */
-async function processFolder(folder, out, { base, browsers, css, minify }) {
+async function processFolder(
+  folder,
+  out,
+  { base, browsers, root, css, minify }
+) {
   if ((await fs.stat(out).catch(() => false)) === false) {
     await fs.mkdir(out);
   }
@@ -102,7 +107,7 @@ async function processFolder(folder, out, { base, browsers, css, minify }) {
         });
       } else if (entry.endsWith(".html") || entry.endsWith(".htm")) {
         processFile(base, filepath, outpath, (source) =>
-          transformHtml(source, { browsers })
+          transformHtml(source, { browsers, root, css })
         );
       } else if (css && entry.endsWith(".css")) {
         processFile(base, filepath, outpath, (source) =>
@@ -120,6 +125,7 @@ async function processFolder(folder, out, { base, browsers, css, minify }) {
         base,
         browsers,
         minify,
+        root: `${root}../`,
         css,
       });
     })

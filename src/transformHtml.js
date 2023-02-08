@@ -6,9 +6,9 @@ import isSupported from "./isSupported.js";
 
 /**
  * @param {string} source
- * @param {{ browsers: string[], css?: boolean }} options
+ * @param {{ browsers: string[], root: string, css?: boolean  }} options
  */
-export default async function transformHtml(source, { browsers, css }) {
+export default async function transformHtml(source, { browsers, root, css }) {
   const esm = isSupported(
     ["es6-module", "es6-module-dynamic-import"],
     browsers
@@ -16,6 +16,9 @@ export default async function transformHtml(source, { browsers, css }) {
 
   const ast = parse(source);
   if (!esm) {
+    ast.querySelectorAll('link[rel="modulepreload"]').forEach((node) => {
+      node.remove();
+    });
     await Promise.all(
       ast.querySelectorAll("script").map(async (node) => {
         if (node.getAttribute("type") !== "module") {
@@ -38,13 +41,13 @@ export default async function transformHtml(source, { browsers, css }) {
     head?.insertAdjacentHTML(
       "afterbegin",
       `
-    <script src="/tvkit-system.js"></script>`
+    <script src="${root}tvkit-system.js"></script>`
     );
   }
   head?.insertAdjacentHTML(
     "afterbegin",
     `
-    <script src="/tvkit-polyfills.js"></script>`
+    <script src="${root}tvkit-polyfills.js"></script>`
   );
   if (css) {
     await Promise.all(

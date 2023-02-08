@@ -45,7 +45,9 @@ export default async function serve(port, target, browser, css) {
       }
       if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
         const content = responseBuffer.toString("utf8");
-        return cache(content, () => transformHtml(content, { css, browsers }));
+        return cache(content, () =>
+          transformHtml(content, { browsers, root: "/", css })
+        );
       }
       if (
         proxyRes.headers["content-type"]?.startsWith("application/javascript")
