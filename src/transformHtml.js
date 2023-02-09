@@ -30,6 +30,7 @@ export default async function transformHtml(source, { browsers, root, css }) {
           node.removeAttribute("type");
           const code = await transformJavascript(node.textContent, {
             browsers,
+            inline: true,
           });
           node.set_content(code);
         }
