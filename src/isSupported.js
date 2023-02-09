@@ -32,6 +32,22 @@ const supportMatrix = {
     edge: 79,
     ie: Infinity,
   },
+  // https://caniuse.com/mdn-css_at-rules_keyframes
+  "css-keyframes": {
+    chrome: 43,
+    safari: 9,
+    firefox: 16,
+    edge: 12,
+    ie: Infinity,
+  },
+  // https://caniuse.com/mdn-javascript_builtins_symbol
+  symbol: {
+    chrome: 38,
+    safari: 9,
+    firefox: 36,
+    edge: 12,
+    ie: Infinity,
+  },
   // Detect IE11
   ie11: {
     chrome: Infinity,

@@ -14,19 +14,26 @@ export default async function transformJavascript(
   source,
   { browsers, inline }
 ) {
-  // Fix "SyntaxError: DOM Exception 12" on very old webkit versions
-  // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
-  let preprocessed = source.replace(
-    ".insertRule(`@keyframes ${name} ${rule}`",
-    ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
-  );
-  const esm = isSupported(
-    ["es6-module", "es6-module-dynamic-import"],
-    browsers
-  );
-  if (inline && !esm) {
+  /** @type {"systemjs" | false} */
+  let modules = "systemjs";
+  let preprocessed = source;
+  if (!isSupported("css-keyframes", browsers)) {
+    // Patch svelte to use -webkit-keyframes
+    // Fixes "SyntaxError: DOM Exception 12" on very old webkit versions
+    // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
+    preprocessed = source.replace(
+      ".insertRule(`@keyframes ${name} ${rule}`",
+      ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
+    );
+  }
+  if (isSupported(["es6-module", "es6-module-dynamic-import"], browsers)) {
+    modules = false;
+  } else if (inline) {
+    // System.js has a bug where it doesn't work with relative imports from a script tag
+    modules = false;
     preprocessed = await inlineImports(preprocessed);
   }
+
   const result = await transformAsync(preprocessed, {
     configFile: false,
     compact: false,
@@ -35,7 +42,7 @@ export default async function transformJavascript(
       [
         "@babel/preset-env",
         {
-          modules: esm || (!esm && inline) ? false : "systemjs",
+          modules,
           corejs: { version: 3 },
           useBuiltIns: "entry",
           targets: browsers,
@@ -45,11 +52,13 @@ export default async function transformJavascript(
     ],
   });
   let code = result?.code ?? "console.error('transformJavascript failed');";
-  // Fix competing Symbol polyfills
-  code = code.replace(
-    'throw new TypeError("@@toPrimitive must return a primitive value.");',
-    ';if (typeof res === "object" && res[Symbol.toPrimitive]) { return res[Symbol.toPrimitive].toString() }; throw new TypeError("@@toPrimitive must return a primitive value.");'
-  );
+  if (!isSupported("symbol", browsers)) {
+    // Fix competing Symbol polyfills
+    code = code.replace(
+      'throw new TypeError("@@toPrimitive must return a primitive value.");',
+      ';if (typeof res === "object" && res[Symbol.toPrimitive]) { return res[Symbol.toPrimitive].toString() }; throw new TypeError("@@toPrimitive must return a primitive value.");'
+    );
+  }
   return code;
 }
 
@@ -57,23 +66,25 @@ export default async function transformJavascript(
  * @param {string} code
  */
 async function inlineImports(code) {
-  // preprocessed
-  const result = await transformAsync(code, {
-    configFile: false,
-    compact: false,
-    cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../"),
-    presets: [
-      [
-        "@babel/preset-env",
-        {
-          modules: "commonjs",
-          corejs: { version: 3 },
-          useBuiltIns: "entry",
-          targets: "last 1 chrome version",
-        },
+  const result = await transformAsync(
+    code.replace("import(", "System.import("),
+    {
+      configFile: false,
+      compact: false,
+      cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../"),
+      presets: [
+        [
+          "@babel/preset-env",
+          {
+            modules: "commonjs",
+            corejs: { version: 3 },
+            useBuiltIns: "entry",
+            targets: "last 1 chrome version",
+          },
+        ],
       ],
-    ],
-  });
+    }
+  );
   if (!result?.code) {
     return code;
   }

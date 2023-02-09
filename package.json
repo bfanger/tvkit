@@ -13,7 +13,7 @@
   },
   "scripts": {
     "dev": "pm2-dev \"bin/tvkit.js serve\"",
-    "dev:latest": "pm2-dev \"bin/tvkit.js serve --browser='chrome 109'\"",
+    "dev:latest": "pm2-dev \"bin/tvkit.js serve --browser='last 1 chrome versions'\"",
     "lint": "concurrently -c \"#c596c7\",\"#3074c0\",\"#7c7cea\" --kill-others-on-fail \"npm:lint:*\"",
     "lint:prettier": "prettier --check --loglevel=warn src",
     "lint:tsc": "tsc --noEmit",
