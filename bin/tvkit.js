@@ -32,10 +32,26 @@ Yargs(hideBin(process.argv))
         default: true,
         describe: "Use --no-css to skip transpiling CSS",
       });
+      yargs.option("ssl-cert", {
+        type: "string",
+        describe: "path to SSL certificate for HTTPS",
+      });
+      yargs.option("ssl-key", {
+        type: "string",
+        describe: "path to SSL certificate's private key",
+      });
     },
-    (argv) => {
+    async (argv) => {
+      /** @type {Parameters<typeof serve>[4]} */
+      let ssl = false;
+      if (typeof argv.sslCert === "string" && typeof argv.sslKey === "string") {
+        ssl = {
+          cert: argv.sslCert,
+          key: argv.sslKey,
+        };
+      }
       // @ts-ignore
-      serve(argv.port, argv.target, argv.browser, argv.css);
+      serve(argv.port, argv.target, argv.browser, argv.css, ssl);
     }
   )
   .command(

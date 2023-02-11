@@ -1,4 +1,7 @@
 // @ts-check
+import fs from "fs/promises";
+import http from "http";
+import https from "https";
 import express from "express";
 import {
   createProxyMiddleware,
@@ -20,14 +23,16 @@ import cache from "./cache.js";
  * @param {string} target url to proxy
  * @param {string} browser browserslist compatible browser
  * @param {boolean} css Also transform css
+ * @param {{cert: string, key: string} | false} ssl
  */
-export default async function serve(port, target, browser, css) {
+export default async function serve(port, target, browser, css, ssl) {
   const browsers = getBrowsers(browser);
   console.info("[tvkit]", {
     port,
     target,
     browsers,
     css,
+    ssl,
   });
   const app = express();
   app.disable("x-powered-by");
@@ -129,8 +134,16 @@ export default async function serve(port, target, browser, css) {
   });
   app.use(proxy);
 
-  app.listen(port, "0.0.0.0", () => {
-    console.info(`[tvkit] Running on http://localhost:${port}/`);
+  const serverOptions = ssl
+    ? { cert: await fs.readFile(ssl.cert), key: await fs.readFile(ssl.key) }
+    : false;
+  const server = serverOptions
+    ? https.createServer(serverOptions, app)
+    : http.createServer(app);
+  server.listen(port, "0.0.0.0", () => {
+    console.info(
+      `[tvkit] Running on ${ssl ? "https" : "http"}://localhost:${port}/`
+    );
   });
 }
 
