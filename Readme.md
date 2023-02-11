@@ -19,6 +19,9 @@ TVKit intercepts requests to the other webserver and makes them work in old brow
   | --no-css  | false                 | Disable CSS transpilation                          |
   | --help    |                       | Show message per command. Ex: `tvkit serve --help` |
 
+tvkit adds browser aliases for SmartTV platforms:
+Example `--browser "Tizen 5"` is aliased to `Chrome 63`
+
 ## Usage (build)
 
 > Experimental feature

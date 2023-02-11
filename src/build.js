@@ -2,7 +2,7 @@
 import fs from "fs/promises";
 import path from "path";
 import * as terser from "terser";
-import browserslist from "browserslist";
+import getBrowsers from "./getBrowsers.js";
 import generatePolyfills from "./generatePolyfills.js";
 import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
@@ -32,7 +32,15 @@ export default async function build(
     );
     process.exit(1);
   }
-  const browsers = browserslist(browser);
+  const browsers = getBrowsers(browser);
+  console.info("[tvkit]", {
+    input: path.resolve(folder),
+    output: path.resolve(out),
+    browsers,
+    css,
+    minify,
+    force,
+  });
   const babelRuntimeModules = await processFolder(folder, out, {
     base: path.resolve(folder),
     browsers,

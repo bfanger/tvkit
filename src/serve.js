@@ -4,7 +4,7 @@ import {
   createProxyMiddleware,
   responseInterceptor,
 } from "http-proxy-middleware";
-import browserslist from "browserslist";
+import getBrowsers from "./getBrowsers.js";
 import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
@@ -22,7 +22,7 @@ import cache from "./cache.js";
  * @param {boolean} css Also transform css
  */
 export default async function serve(port, target, browser, css) {
-  const browsers = browserslist(browser);
+  const browsers = getBrowsers(browser);
   console.info("[tvkit]", {
     port,
     target,
