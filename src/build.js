@@ -1,16 +1,17 @@
 // @ts-check
 import fs from "fs/promises";
 import path from "path";
-import { createRequire } from "module";
 import * as terser from "terser";
 import browserslist from "browserslist";
 import generatePolyfills from "./generatePolyfills.js";
 import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
-import isSupported from "./isSupported.js";
+import babelRuntime from "./babelRuntime.js";
 
 /**
+ * Copy files from input to output folder and transform the html, javascript and css files.
+ *
  * @param {string} folder The input folder
  * @param {string} out The output folder
  * @param {string} browser browserslist compatible browser
@@ -32,34 +33,29 @@ export default async function build(
     process.exit(1);
   }
   const browsers = browserslist(browser);
-  await processFolder(folder, out, {
+  const babelRuntimeModules = await processFolder(folder, out, {
     base: path.resolve(folder),
     browsers,
     root: "",
     css,
     minify,
   });
-  await generatePolyfills(browsers).then((code) => {
-    fs.writeFile(path.resolve(out, "tvkit-polyfills.js"), code, "utf-8");
-    console.info("✅", "tvkit-polyfills.js");
+  await generatePolyfills(browsers).then(async (code) => {
+    await fs.writeFile(path.resolve(out, "tvkit-polyfills.js"), code, "utf-8");
+    console.info("✅", "/tvkit-polyfills.js");
   });
-  const esm = isSupported(
-    ["es6-module", "es6-module-dynamic-import"],
-    browsers
+  await fs.mkdir(path.resolve(out, "tvkit-babel-runtime/helpers"), {
+    recursive: true,
+  });
+  await Promise.all(
+    Array.from(babelRuntimeModules).map(async (module) => {
+      const code = await babelRuntime(module.substring(20), browsers);
+      await fs.writeFile(path.resolve(out, `${module.substring(1)}.js`), code, {
+        encoding: "utf-8",
+      });
+      console.info("✅", `${module}.js`);
+    })
   );
-  if (!esm) {
-    const require = createRequire(import.meta.url);
-    await fs.copyFile(
-      require.resolve("systemjs/dist/s.min.js"),
-      path.join(out, "tvkit-system.js")
-    );
-    console.info("⏩", "tvkit-system.js");
-    await fs.copyFile(
-      require.resolve("systemjs/dist/s.min.js"),
-      path.join(out, "s.min.js.map")
-    );
-    console.info("⏩", "s.min.js.map");
-  }
 }
 
 /**
@@ -75,6 +71,7 @@ async function processFolder(
   if ((await fs.stat(out).catch(() => false)) === false) {
     await fs.mkdir(out);
   }
+  const babelRuntimeModules = new Set();
   const entries = await fs.readdir(folder);
   /** @type {Array<{path: string, out: string}>}  */
   const subfolders = [];
@@ -94,8 +91,13 @@ async function processFolder(
         return;
       }
       if (entry.endsWith(".js")) {
-        processFile(base, filepath, outpath, async (source) => {
-          const code = await transformJavascript(source, { browsers });
+        await processFile(base, filepath, outpath, async (source) => {
+          let code = await transformJavascript(source, { browsers, root });
+          const matches = code.match(/\/tvkit-babel-runtime\/([^'"]+)/g);
+          matches?.forEach((module) => {
+            babelRuntimeModules.add(module);
+            code = code.replace(module, `${module}.js`);
+          });
           if (!minify) {
             return code;
           }
@@ -106,11 +108,11 @@ async function processFolder(
           return minified.code ?? code;
         });
       } else if (entry.endsWith(".html") || entry.endsWith(".htm")) {
-        processFile(base, filepath, outpath, (source) =>
+        await processFile(base, filepath, outpath, (source) =>
           transformHtml(source, { browsers, root, css })
         );
       } else if (css && entry.endsWith(".css")) {
-        processFile(base, filepath, outpath, (source) =>
+        await processFile(base, filepath, outpath, (source) =>
           transformCss(source, { browsers, from: filepath })
         );
       } else {
@@ -119,17 +121,22 @@ async function processFolder(
       }
     })
   );
-  await Promise.all(
-    subfolders.map((subfolder) => {
-      return processFolder(subfolder.path, subfolder.out, {
+
+  const processed = await Promise.all(
+    subfolders.map((subfolder) =>
+      processFolder(subfolder.path, subfolder.out, {
         base,
         browsers,
         minify,
         root: `${root}../`,
         css,
-      });
-    })
+      })
+    )
   );
+  for (const additionalModules of processed) {
+    additionalModules.forEach((module) => babelRuntimeModules.add(module));
+  }
+  return babelRuntimeModules;
 }
 
 /**

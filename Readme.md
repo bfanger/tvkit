@@ -21,6 +21,9 @@ TVKit intercepts requests to the other webserver and makes them work in old brow
 
 ## Usage (build)
 
+> Experimental feature
+> Use alternative [@vitejs/plugin-legacy](https://www.npmjs.com/package/@vitejs/plugin-legacy) if you can.
+
 ```sh
 npx tvkit@latest build path/to/build --out path/to/output
 ```

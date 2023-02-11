@@ -6,6 +6,7 @@ import { createRequire } from "module";
 import * as esbuild from "esbuild";
 import compat from "core-js-compat";
 import isSupported from "./isSupported.js";
+import tmpFolder from "./tmpFolder.js";
 
 const require = createRequire(import.meta.url);
 
@@ -14,20 +15,12 @@ const require = createRequire(import.meta.url);
  * @returns {Promise<string>} javascript code
  */
 export default async function generatePolyfills(targets) {
-  const features = compat({
-    targets,
-    exclude: getExcludeList(),
-  }).list;
-
-  const imports = [];
   let code = "";
-  for (const feature of features) {
+  const imports = [];
+  for (const module of getCoreJSModules(targets)) {
     imports.push(
-      `import ${JSON.stringify(require.resolve(`core-js/modules/${feature}`))};`
+      `import ${JSON.stringify(require.resolve(`core-js/modules/${module}`))};`
     );
-  }
-  if (!isSupported(["es6-generators", "async-functions"], targets)) {
-    imports.push('import "regenerator-runtime";');
   }
   if (!isSupported("fetch", targets)) {
     imports.push('import "whatwg-fetch";');
@@ -57,7 +50,7 @@ removePolyfill();
 `;
   }
   if (!isSupported("normalize", targets)) {
-    imports.push('import "unorm";'); // @todo: Use a smaller non-spec-compliant polyfl)?
+    imports.push('import "unorm";'); // @todo: Use a smaller non-spec-compliant polyfill?
   }
 
   if (!isSupported("composedPath", targets)) {
@@ -92,9 +85,19 @@ if (typeof new Error().stack !== "string") {
   Error.prototype.stack = Error.prototype.stack || ""; 
 }
 `;
+  if (!isSupported(["es6-module", "es6-module-dynamic-import"], targets)) {
+    const systemJs = await fs.readFile(
+      require.resolve("systemjs/dist/s.min.js"),
+      "utf8"
+    );
+    code += systemJs.substring(
+      systemJs.indexOf("*/") + 2,
+      systemJs.indexOf("# sourceMappingURL=")
+    );
+  }
 
   // Bundle the polyfills
-  const folder = await createFolder(targets);
+  const folder = await tmpFolder(targets);
   const entry = path.join(folder, "entry.js");
   await fs.writeFile(entry, `${imports.join("\n")}\n${code}`);
   const out = path.join(folder, "polyfills.js");
@@ -112,37 +115,9 @@ if (typeof new Error().stack !== "string") {
 }
 
 /**
- * @param {string[]} browsers
+ * @param {string[]} targets
  */
-async function createFolder(browsers) {
-  // generating into the node_modules folder prevents pm2 from restarting.
-  const projectFolder = path.dirname(
-    path.dirname(fileURLToPath(import.meta.url))
-  );
-  const tvkitFolder =
-    path.basename(path.dirname(projectFolder)) === "node_modules"
-      ? path.resolve(projectFolder, "../.tvkit")
-      : path.resolve(projectFolder, "node_modules/.tvkit");
-
-  await fs.stat(tvkitFolder).catch(() => fs.mkdir(tvkitFolder));
-  const slug = browsers
-    .join("_")
-    .toLowerCase()
-    .replace(/[ .\\/]+/gm, "");
-  const folder = path.join(tvkitFolder, slug);
-  await fs.stat(tvkitFolder).catch(() => fs.mkdir(tvkitFolder));
-  await fs.stat(folder).catch(() => fs.mkdir(folder));
-  return folder;
-}
-
-/**
- * The default list from core-js-compat also contains unstable javascript features.
- * This function filters out all unstable features and features that are not supported by any browser.
- */
-function getExcludeList() {
-  /**
-   * @type {string[]}
-   */
+function getCoreJSModules(targets) {
   const exclude = [
     "es.array.push",
     "es.regexp.flags",
@@ -150,13 +125,15 @@ function getExcludeList() {
     "web.immediate",
   ];
   const compatData = require("core-js-compat/data.json");
-
   for (const [feature, browsers] of Object.entries(compatData)) {
     if (feature.startsWith("esnext.")) {
-      exclude.push(feature);
+      exclude.push(feature); // Exclude unstable javascript features
     } else if (Object.keys(browsers).length === 0) {
-      exclude.push(feature);
+      exclude.push(feature); // Exclude features that are not supported by any browser.
     }
   }
-  return exclude;
+  return compat({
+    targets,
+    exclude,
+  }).list;
 }

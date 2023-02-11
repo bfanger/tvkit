@@ -30,26 +30,22 @@ export default async function transformHtml(source, { browsers, root, css }) {
           node.removeAttribute("type");
           const code = await transformJavascript(node.textContent, {
             browsers,
-            inline: true,
+            root,
           });
           node.set_content(code);
         }
       })
     );
   }
-  const head = ast.querySelector("head");
-  if (!esm) {
-    head?.insertAdjacentHTML(
-      "afterbegin",
-      `
-    <script src="${root}tvkit-system.js"></script>`
+  const script = ast.querySelector("script");
+  const inject =
+    ast.querySelector("head") ?? ast.querySelector("body") ?? script;
+  if (script && inject) {
+    inject.insertAdjacentHTML(
+      inject === script ? "beforebegin" : "afterbegin",
+      `\n    <script src="${root}tvkit-polyfills.js"></script>`
     );
   }
-  head?.insertAdjacentHTML(
-    "afterbegin",
-    `
-    <script src="${root}tvkit-polyfills.js"></script>`
-  );
   if (css) {
     await Promise.all(
       ast.querySelectorAll("style").map(async (node) => {

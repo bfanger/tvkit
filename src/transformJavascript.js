@@ -6,90 +6,61 @@ import { transformAsync } from "@babel/core";
 import isSupported from "./isSupported.js";
 
 /**
+ * Convert source to a module that is compatible with the given browsers.
+ *
  * @param {string} source
- * @param {{ browsers: string[], inline?: boolean }} options
+ * @param {{browsers: string[], root: string}} options
  * @returns {Promise<string>}
  */
-export default async function transformJavascript(
-  source,
-  { browsers, inline }
-) {
-  /** @type {"systemjs" | false} */
-  let modules = "systemjs";
-  let preprocessed = source;
+export default async function transformJavascript(source, { browsers, root }) {
+  let code = source;
   if (!isSupported("css-keyframes", browsers)) {
     // Patch svelte to use -webkit-keyframes
     // Fixes "SyntaxError: DOM Exception 12" on very old webkit versions
     // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
-    preprocessed = source.replace(
+    code = source.replace(
       ".insertRule(`@keyframes ${name} ${rule}`",
       ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
     );
   }
-  if (isSupported(["es6-module", "es6-module-dynamic-import"], browsers)) {
-    modules = false;
-  } else if (inline) {
-    // System.js has a bug where it doesn't work with relative imports from a script tag
-    modules = false;
-    preprocessed = await inlineImports(preprocessed);
-  }
-
-  const result = await transformAsync(preprocessed, {
-    configFile: false,
-    compact: false,
-    cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../"),
+  code = await babelTranform(code, {
     presets: [
       [
         "@babel/preset-env",
         {
-          modules,
-          corejs: { version: 3 },
-          useBuiltIns: "entry",
+          modules: isSupported(
+            ["es6-module", "es6-module-dynamic-import"],
+            browsers
+          )
+            ? false
+            : "systemjs",
+          useBuiltIns: false,
           targets: browsers,
           spec: true,
         },
       ],
     ],
+    plugins: ["@babel/plugin-transform-runtime"],
   });
-  let code = result?.code ?? "console.error('transformJavascript failed');";
-  if (!isSupported("symbol", browsers)) {
-    // Fix competing Symbol polyfills
-    code = code.replace(
-      'throw new TypeError("@@toPrimitive must return a primitive value.");',
-      ';if (typeof res === "object" && res[Symbol.toPrimitive]) { return res[Symbol.toPrimitive].toString() }; throw new TypeError("@@toPrimitive must return a primitive value.");'
-    );
-  }
+
+  code = code.replaceAll("@babel/runtime/", `${root}tvkit-babel-runtime/`);
   return code;
 }
 
 /**
- * @param {string} code
+ * @param {string} source
+ * @param {import("@babel/core").TransformOptions} options
  */
-async function inlineImports(code) {
-  const result = await transformAsync(
-    code.replace("import(", "System.import("),
-    {
-      configFile: false,
-      compact: false,
-      cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../"),
-      presets: [
-        [
-          "@babel/preset-env",
-          {
-            modules: "commonjs",
-            corejs: { version: 3 },
-            useBuiltIns: "entry",
-            targets: "last 1 chrome version",
-          },
-        ],
-      ],
-    }
-  );
-  if (!result?.code) {
-    return code;
+async function babelTranform(source, options) {
+  const result = await transformAsync(source, {
+    configFile: false,
+    compact: false,
+    cwd: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../"),
+    ...options,
+  });
+  if (result?.code) {
+    return result?.code;
   }
-  return `(async function () {\n${result.code.replace(
-    " = require(",
-    " = await System.import("
-  )}\n})()`;
+  console.warn("babelTranform failed");
+  return `// babelTranform failed\n${source}`;
 }

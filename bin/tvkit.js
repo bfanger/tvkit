@@ -17,6 +17,7 @@ Yargs(hideBin(process.argv))
         describe: "Url that needs transpilation",
       });
       yargs.option("port", {
+        alias: "p",
         type: "number",
         default: 3000,
         describe: "Port of the proxy server",
@@ -39,13 +40,14 @@ Yargs(hideBin(process.argv))
   )
   .command(
     "build [folder]",
-    "Copy and transform files",
+    "Copy and transform files (experimental)",
     (yargs) => {
       yargs.positional("[folder]", {
         type: "string",
         describe: "Folder to transform",
       });
       yargs.option("out", {
+        alias: "o",
         type: "string",
         describe: "The output folder",
         demandOption: true,

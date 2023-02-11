@@ -1,19 +1,17 @@
 // @ts-check
-import fs from "fs/promises";
-import crypto from "crypto";
-import { createRequire } from "module";
 import express from "express";
 import {
   createProxyMiddleware,
   responseInterceptor,
 } from "http-proxy-middleware";
-
 import browserslist from "browserslist";
 import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
 import generatePolyfills from "./generatePolyfills.js";
+import babelRuntime from "./babelRuntime.js";
 import isSupported from "./isSupported.js";
+import cache from "./cache.js";
 
 /**
  * Start the proxy server
@@ -44,8 +42,7 @@ export default async function serve(port, target, browser, css) {
         return responseBuffer;
       }
       if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
-        const content = responseBuffer.toString("utf8");
-        return cache(content, () =>
+        return tryCache(responseBuffer.toString("utf8"), (content) =>
           transformHtml(content, { browsers, root: "/", css })
         );
       }
@@ -53,7 +50,7 @@ export default async function serve(port, target, browser, css) {
         proxyRes.headers["content-type"]?.startsWith("application/javascript")
       ) {
         let code = responseBuffer.toString("utf8");
-        return cache(code, () => {
+        return tryCache(code, () => {
           if (req.url === "/@vite/client") {
             if (
               isSupported(
@@ -93,34 +90,20 @@ export default async function serve(port, target, browser, css) {
               );
             }
           }
-          return transformJavascript(code, { browsers });
+          return transformJavascript(code, { browsers, root: "/" });
         });
       }
       return responseBuffer;
     }),
   });
 
-  const files = new Map();
-  const require = createRequire(import.meta.url);
-  files.set(
-    "/tvkit-system.js",
-    await fs.readFile(require.resolve("systemjs/dist/s.min.js"), "utf8")
-  );
-  files.set(
-    "/s.min.js.map",
-    await fs.readFile(require.resolve("systemjs/dist/s.min.js.map"), "utf8")
-  );
-  files.set("/tvkit-polyfills.js", await generatePolyfills(browsers));
+  const tvkitPolyfills = await generatePolyfills(browsers);
+  app.get("/tvkit-polyfills.js", (_, res) => {
+    res.setHeader("content-type", "application/javascript");
+    res.setHeader("cache-control", "private,max-age=86400");
+    res.send(tvkitPolyfills);
+  });
 
-  for (const url of files.keys()) {
-    app.get(url, (_, res) => {
-      const mimetype = url.endsWith(".map")
-        ? "application/json"
-        : "application/javascript";
-      res.setHeader("content-type", mimetype);
-      res.send(files.get(url));
-    });
-  }
   if (css) {
     const raw = express.raw({
       inflate: true,
@@ -129,14 +112,21 @@ export default async function serve(port, target, browser, css) {
     });
     app.post("/tvkit-postcss", (req, res) => {
       raw(req, res, async () => {
-        const code = req.body.toString("utf8");
-        const body = await cache(code, () =>
+        const body = await tryCache(req.body.toString("utf8"), (code) =>
           transformCss(code, { browsers, from: "tvkit-postcss.css" })
         );
         res.send(body);
       });
     });
   }
+  app.get("/tvkit-babel-runtime/*", async (req, res) => {
+    res.setHeader("content-type", "application/javascript");
+    res.setHeader("cache-control", "private,max-age=86400");
+    const code = await tryCache(req.url, () =>
+      babelRuntime(req.url.substring(20), browsers)
+    );
+    res.send(code);
+  });
   app.use(proxy);
 
   app.listen(port, "0.0.0.0", () => {
@@ -145,23 +135,17 @@ export default async function serve(port, target, browser, css) {
 }
 
 /**
- * @type {Record<string, string>}
- */
-const inMemoryCache = {};
-
-/**
- * Cache the transformations for 2-5 minutes.
+ * Cache transformation for 2-5 minutes or on error return the original content.
  *
  * @param {string} content
- * @param {() => string|Promise<string>} transformer
+ * @param {(content: string) => string|Promise<string>} transformer
  */
-async function cache(content, transformer) {
-  const key = crypto.createHash("md5").update(content).digest("hex");
-  if (!inMemoryCache[key]) {
-    inMemoryCache[key] = await transformer();
-    setTimeout(() => {
-      delete inMemoryCache[key];
-    }, 180_000 * Math.random() + 120_000);
+async function tryCache(content, transformer) {
+  try {
+    const ttl = 180 * Math.random() + 120;
+    return await cache(content, ttl, transformer);
+  } catch (err) {
+    console.warn(err);
+    return content;
   }
-  return inMemoryCache[key];
 }
