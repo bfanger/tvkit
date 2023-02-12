@@ -2,6 +2,7 @@
 import fs from "fs/promises";
 import http from "http";
 import https from "https";
+import crypto from "crypto";
 import express from "express";
 import {
   createProxyMiddleware,
@@ -27,6 +28,11 @@ import cache from "./cache.js";
  */
 export default async function serve(port, target, browser, css, ssl) {
   const browsers = getBrowsers(browser);
+  const etag = crypto
+    .createHash("md5")
+    .update(JSON.stringify(browsers))
+    .digest("hex");
+  const minify = true;
   console.info("[tvkit]", {
     port,
     target,
@@ -102,10 +108,15 @@ export default async function serve(port, target, browser, css, ssl) {
     }),
   });
 
-  const tvkitPolyfills = await generatePolyfills(browsers);
-  app.get("/tvkit-polyfills.js", (_, res) => {
-    res.setHeader("content-type", "application/javascript");
-    res.setHeader("cache-control", "private,max-age=86400");
+  const tvkitPolyfills = await generatePolyfills({ browsers, minify });
+  app.get("/tvkit-polyfills.js", (req, res) => {
+    if (req.headers["if-none-match"] === etag) {
+      res.status(304).end();
+      return;
+    }
+    res.setHeader("Content-Type", "application/javascript");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("ETag", etag);
     res.send(tvkitPolyfills);
   });
 
@@ -125,10 +136,15 @@ export default async function serve(port, target, browser, css, ssl) {
     });
   }
   app.get("/tvkit-babel-runtime/*", async (req, res) => {
-    res.setHeader("content-type", "application/javascript");
-    res.setHeader("cache-control", "private,max-age=86400");
+    if (req.headers["if-none-match"] === etag) {
+      res.status(304).end();
+      return;
+    }
+    res.setHeader("Content-Type", "application/javascript");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("ETag", etag);
     const code = await tryCache(req.url, () =>
-      babelRuntime(req.url.substring(20), browsers)
+      babelRuntime(req.url.substring(20), { browsers, minify })
     );
     res.send(code);
   });

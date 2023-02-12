@@ -12,31 +12,31 @@ import isSupported from "./isSupported.js";
 const require = createRequire(import.meta.url);
 
 /**
- * @param {string[]} targets
+ * @param {{browsers: string[], minify: boolean}} options
  * @returns {Promise<string>} javascript code
  */
-export default async function generatePolyfills(targets) {
+export default async function generatePolyfills({ browsers, minify }) {
   let code = "";
   const imports = [];
-  for (const module of getCoreJSModules(targets)) {
+  for (const module of getCoreJSModules(browsers)) {
     imports.push(`core-js/modules/${module}`);
   }
-  if (!isSupported("fetch", targets)) {
+  if (!isSupported("fetch", browsers)) {
     imports.push("whatwg-fetch");
   }
-  if (!isSupported("intersectionobserver", targets)) {
+  if (!isSupported("intersectionobserver", browsers)) {
     imports.push("intersection-observer");
   }
-  if (!isSupported("proxy", targets)) {
+  if (!isSupported("proxy", browsers)) {
     imports.push("proxy-polyfill/proxy.min.js");
   }
-  if (!isSupported("textencoder", targets)) {
+  if (!isSupported("textencoder", browsers)) {
     imports.push("fast-text-encoding");
   }
-  if (!isSupported("customevent", targets) || isSupported("ie11", targets)) {
+  if (!isSupported("customevent", browsers) || isSupported("ie11", browsers)) {
     imports.push("custom-event-polyfill");
   }
-  if (!isSupported("childnode-remove", targets)) {
+  if (!isSupported("childnode-remove", browsers)) {
     imports.push([
       "appendPolyfill",
       "cross-browser-polyfill/src/polyfills/element-append",
@@ -50,11 +50,11 @@ appendPolyfill();
 removePolyfill();
     `;
   }
-  if (!isSupported("normalize", targets)) {
+  if (!isSupported("normalize", browsers)) {
     imports.push("unorm"); // @todo: Use a smaller non-spec-compliant polyll?
   }
 
-  if (!isSupported("composedPath", targets)) {
+  if (!isSupported("composedPath", browsers)) {
     code += `
 if (!Event.prototype.composedPath) {
   Event.prototype.composedPath = function composedPathPolyfill() {
@@ -86,7 +86,7 @@ if (typeof new Error().stack !== "string") {
   Error.prototype.stack = Error.prototype.stack || ""; 
 }
 `;
-  if (!isSupported(["es6-module", "es6-module-dynamic-import"], targets)) {
+  if (!isSupported(["es6-module", "es6-module-dynamic-import"], browsers)) {
     const systemJs = await fs.readFile(
       require.resolve("systemjs/dist/s.min.js"),
       "utf8"
@@ -98,7 +98,7 @@ if (typeof new Error().stack !== "string") {
   }
 
   // Bundle the polyfills
-  const folder = await tmpFolder(targets);
+  const folder = await tmpFolder(browsers);
   const input = path.join(folder, "entry.js");
   const source = `${imports
     .map((entry) => {
@@ -111,12 +111,14 @@ if (typeof new Error().stack !== "string") {
     })
     .join("\n")}\n${code}`;
   await fs.writeFile(input, source, "utf8");
-
+  const plugins = [commonjs()];
+  if (minify) {
+    plugins.push(terser({ ecma: 5, safari10: true }));
+  }
   const builder = await rollup({
     input,
     plugins: [commonjs(), terser({ ecma: 5, safari10: true })],
     watch: false,
-    output: {},
   });
   const result = await builder.generate({
     format: "iife",

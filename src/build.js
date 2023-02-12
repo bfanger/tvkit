@@ -48,7 +48,7 @@ export default async function build(
     css,
     minify,
   });
-  await generatePolyfills(browsers).then(async (code) => {
+  await generatePolyfills({ browsers, minify }).then(async (code) => {
     await fs.writeFile(path.resolve(out, "tvkit-polyfills.js"), code, "utf-8");
     console.info("✅", "/tvkit-polyfills.js");
   });
@@ -57,7 +57,10 @@ export default async function build(
   });
   await Promise.all(
     Array.from(babelRuntimeModules).map(async (module) => {
-      const code = await babelRuntime(module.substring(20), browsers);
+      const code = await babelRuntime(module.substring(20), {
+        browsers,
+        minify,
+      });
       await fs.writeFile(path.resolve(out, `${module.substring(1)}.js`), code, {
         encoding: "utf-8",
       });
