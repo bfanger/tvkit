@@ -1,6 +1,6 @@
 {
   "name": "tvkit",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Proxy to run a modern dev server in old browsers",
   "license": "MIT",
   "repository": {
@@ -12,7 +12,7 @@
     "tvkit": "bin/tvkit.js"
   },
   "scripts": {
-    "dev": "pm2-dev \"bin/tvkit.js serve\"",
+    "dev": "pm2-dev \"bin/tvkit.js serve --port 3011 --browser ie11\"",
     "dev:latest": "pm2-dev \"bin/tvkit.js serve --browser='last 1 chrome versions'\"",
     "lint": "concurrently -c \"#c596c7\",\"#3074c0\",\"#7c7cea\" --kill-others-on-fail \"npm:lint:*\"",
     "lint:prettier": "prettier --check --loglevel=warn src",
@@ -35,7 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "concurrently": "^7.6.0",
-    "eslint": "^8.33.0",
+    "eslint": "^8.34.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -45,7 +45,7 @@
     "eslint-plugin-only-warn": "^1.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
-    "prettier": "^2.8.3",
+    "prettier": "^2.8.4",
     "typescript": "^4.9.5"
   },
   "dependencies": {
@@ -56,12 +56,12 @@
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-terser": "^0.4.0",
     "browserslist": "^4.21.5",
-    "caniuse-lite": "^1.0.30001450",
+    "caniuse-lite": "^1.0.30001451",
     "core-js": "^3.27.2",
     "core-js-compat": "^3.27.2",
     "cross-browser-polyfill": "^1.0.5",
     "custom-event-polyfill": "^1.0.7",
-    "esbuild": "^0.17.6",
+    "esbuild": "^0.17.7",
     "express": "^4.18.2",
     "fast-text-encoding": "^1.0.6",
     "http-proxy-middleware": "^2.0.6",
@@ -76,6 +76,7 @@
     "terser": "^5.16.3",
     "unorm": "^1.6.0",
     "whatwg-fetch": "^3.6.2",
+    "yargonaut": "^1.1.4",
     "yargs": "^17.6.2"
   }
 }

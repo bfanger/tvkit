@@ -8,16 +8,18 @@ TVKit intercepts requests to the other webserver and makes them work in old brow
 ## Usage (dev server)
 
 - Start your vite project as normal
-- Run `npx tvkit@latest serve` in another terminal
+- Run `npx tvkit@latest serve --browser "chrome 50"` in another terminal
 - Open http://localhost:3000/ in an old browser to visit your website
 
-  | Option    | Default value         | Description                                        |
-  | --------- | --------------------- | -------------------------------------------------- |
-  | [target]  | http://localhost:5173 | The URL of the website that is too new             |
-  | --port    | 3000                  | The port the proxy server is going to run on       |
-  | --browser | "ie 11"               | The transpilation target (uses browserslist)       |
-  | --no-css  | false                 | Disable CSS transpilation                          |
-  | --help    |                       | Show message per command. Ex: `tvkit serve --help` |
+## tvkit serve
+
+| Option    | Default value         | Description                                        |
+| --------- | --------------------- | -------------------------------------------------- |
+| [target]  | http://localhost:5173 | The URL of the website that is too new             |
+| --port    | 3000                  | The port the proxy server is going to run on       |
+| --browser |                       | The transpilation target (uses browserslist)       |
+| --no-css  | false                 | Disable CSS transpilation                          |
+| --help    |                       | Show message per command. Ex: `tvkit serve --help` |
 
 tvkit adds browser aliases for SmartTV platforms:
 Example `--browser "Tizen 5"` is aliased to `Chrome 63`
@@ -28,7 +30,7 @@ Example `--browser "Tizen 5"` is aliased to `Chrome 63`
 > Use alternative [@vitejs/plugin-legacy](https://www.npmjs.com/package/@vitejs/plugin-legacy) if you can.
 
 ```sh
-npx tvkit@latest build path/to/build --out path/to/output
+npx tvkit@latest build path/to/build --out path/to/output --browser "chrome 50"
 ```
 
 ## Technology
