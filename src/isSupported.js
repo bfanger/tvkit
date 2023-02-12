@@ -23,6 +23,8 @@ const supportMatrix = {
     firefox: 31,
     edge: 12,
     ie: Infinity,
+    samsung: 4,
+    opera: 21,
   },
   // https://caniuse.com/mdn-api_event_composedpath
   composedPath: {
@@ -31,6 +33,8 @@ const supportMatrix = {
     firefox: 59,
     edge: 79,
     ie: Infinity,
+    samsung: 6.2,
+    opera: 40,
   },
   // https://caniuse.com/mdn-css_at-rules_keyframes
   "css-keyframes": {
@@ -39,6 +43,8 @@ const supportMatrix = {
     firefox: 16,
     edge: 12,
     ie: Infinity,
+    samsung: 4,
+    opera: 30,
   },
   // https://caniuse.com/mdn-javascript_builtins_symbol
   symbol: {
@@ -47,6 +53,8 @@ const supportMatrix = {
     firefox: 36,
     edge: 12,
     ie: Infinity,
+    samsung: 4,
+    opera: 25,
   },
   // Detect IE11
   ie11: {
@@ -55,6 +63,8 @@ const supportMatrix = {
     firefox: Infinity,
     edge: Infinity,
     ie: 11,
+    samsung: Infinity,
+    opera: Infinity,
   },
 };
 
@@ -64,7 +74,7 @@ const supportMatrix = {
  */
 function featureIsSupported(feature, browsers) {
   if (feature in supportMatrix) {
-    return inSupportMatrix(browsers, supportMatrix[feature]);
+    return inSupportMatrix(feature, browsers);
   }
   const packed = caniuse.features[feature];
   if (!packed) {
@@ -78,7 +88,7 @@ function featureIsSupported(feature, browsers) {
     const support = data.stats[browser]?.[version];
     if (!support) {
       console.warn(
-        `No stats available for feature "${feature}" in combination with "${browser} ${version}"`
+        `No stats available for feature "${feature}" in combination with "${browserFull}"`
       );
       return false;
     }
@@ -89,23 +99,37 @@ function featureIsSupported(feature, browsers) {
   return true;
 }
 
+/** @type {Record<string, string>} */
+const browserAliases = {
+  and_chr: "chrome",
+  and_ff: "firefox",
+  and_qq: "qq",
+  and_uc: "uc",
+  ios_saf: "safari",
+  op_mob: "opera",
+};
 /**
+ * @param {string} feature
  * @param {string[]} browsers
- * @param {Record<string, number>} matrix
  */
-function inSupportMatrix(browsers, matrix) {
+function inSupportMatrix(feature, browsers) {
+  const matrix = supportMatrix[feature];
   for (const browserFull of browsers) {
     const split = browserFull.split(" ");
-    const browser = split[0];
-    const version = parseFloat(split[1]);
+    let browser = split[0];
+    if (browserAliases[browser]) {
+      browser = browserAliases[browser];
+    }
+    const version = parseFloat(split[1].replace(/-.+$/, ""));
     if (browser in matrix) {
       if (version < matrix[browser]) {
         return false;
       }
     } else {
-      console.warn(
-        `normalize support is implemented  for browser "${browser}"`
-      );
+      if (["qq", "uc", "op_mini", "kaios"].includes(browser)) {
+        return false; // unknown support assume false to be safe
+      }
+      console.warn(`"${feature}" has no entry for browser "${browser}"`);
       return false;
     }
   }

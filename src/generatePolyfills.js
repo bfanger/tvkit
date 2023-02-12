@@ -1,12 +1,13 @@
 // @ts-check
 import fs from "fs/promises";
-import { fileURLToPath } from "url";
 import path from "path";
 import { createRequire } from "module";
-import * as esbuild from "esbuild";
 import compat from "core-js-compat";
-import isSupported from "./isSupported.js";
+import commonjs from "@rollup/plugin-commonjs";
+import { rollup } from "rollup";
+import terser from "@rollup/plugin-terser";
 import tmpFolder from "./tmpFolder.js";
+import isSupported from "./isSupported.js";
 
 const require = createRequire(import.meta.url);
 
@@ -18,39 +19,39 @@ export default async function generatePolyfills(targets) {
   let code = "";
   const imports = [];
   for (const module of getCoreJSModules(targets)) {
-    imports.push(
-      `import ${JSON.stringify(require.resolve(`core-js/modules/${module}`))};`
-    );
+    imports.push(`core-js/modules/${module}`);
   }
   if (!isSupported("fetch", targets)) {
-    imports.push('import "whatwg-fetch";');
+    imports.push("whatwg-fetch");
   }
   if (!isSupported("intersectionobserver", targets)) {
-    imports.push('import "intersection-observer";');
+    imports.push("intersection-observer");
   }
   if (!isSupported("proxy", targets)) {
-    imports.push('import "proxy-polyfill/proxy.min.js";');
+    imports.push("proxy-polyfill/proxy.min.js");
   }
   if (!isSupported("textencoder", targets)) {
-    imports.push('import "fast-text-encoding";');
+    imports.push("fast-text-encoding");
   }
   if (!isSupported("customevent", targets) || isSupported("ie11", targets)) {
-    imports.push('import "custom-event-polyfill";');
+    imports.push("custom-event-polyfill");
   }
   if (!isSupported("childnode-remove", targets)) {
-    imports.push(
-      'import appendPolyfill from "cross-browser-polyfill/src/polyfills/element-append";'
-    );
-    imports.push(
-      'import removePolyfill from "cross-browser-polyfill/src/polyfills/element-remove";'
-    );
+    imports.push([
+      "appendPolyfill",
+      "cross-browser-polyfill/src/polyfills/element-append",
+    ]);
+    imports.push([
+      "removePolyfill",
+      "cross-browser-polyfill/src/polyfills/element-remove",
+    ]);
     code += `
 appendPolyfill();
 removePolyfill();
-`;
+    `;
   }
   if (!isSupported("normalize", targets)) {
-    imports.push('import "unorm";'); // @todo: Use a smaller non-spec-compliant polyfill?
+    imports.push("unorm"); // @todo: Use a smaller non-spec-compliant polyll?
   }
 
   if (!isSupported("composedPath", targets)) {
@@ -98,20 +99,33 @@ if (typeof new Error().stack !== "string") {
 
   // Bundle the polyfills
   const folder = await tmpFolder(targets);
-  const entry = path.join(folder, "entry.js");
-  await fs.writeFile(entry, `${imports.join("\n")}\n${code}`);
-  const out = path.join(folder, "polyfills.js");
-  const dirname = path.dirname(fileURLToPath(import.meta.url));
-  await esbuild.build({
-    entryPoints: [entry],
-    absWorkingDir: path.resolve(dirname, "../"),
-    bundle: true,
-    minify: true,
-    format: "iife",
-    target: targets.map((target) => target.replace(" ", "")),
-    outfile: out,
+  const input = path.join(folder, "entry.js");
+  const source = `${imports
+    .map((entry) => {
+      if (typeof entry === "string") {
+        return `import ${JSON.stringify(require.resolve(entry))};`;
+      }
+      return `import ${entry[0]} from ${JSON.stringify(
+        require.resolve(entry[1])
+      )};`;
+    })
+    .join("\n")}\n${code}`;
+  await fs.writeFile(input, source, "utf8");
+
+  const builder = await rollup({
+    input,
+    plugins: [commonjs(), terser({ ecma: 5, safari10: true })],
+    watch: false,
+    output: {},
   });
-  return fs.readFile(out, "utf8");
+  const result = await builder.generate({
+    format: "iife",
+  });
+  const output = result.output[0].code;
+  if (result.output.length !== 1 && !output) {
+    throw new Error("Unexpected output");
+  }
+  return output;
 }
 
 /**
