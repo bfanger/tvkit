@@ -38,12 +38,11 @@ export default async function transformHtml(source, { browsers, root, css }) {
     );
   }
   const script = ast.querySelector("script");
-  const inject =
-    ast.querySelector("head") ?? ast.querySelector("body") ?? script;
-  if (script && inject) {
-    inject.insertAdjacentHTML(
-      inject === script ? "beforebegin" : "afterbegin",
-      `\n    <script src="${root}tvkit-polyfills.js"></script>`
+
+  if (script) {
+    script.insertAdjacentHTML(
+      "beforebegin",
+      `<script src="${root}tvkit-polyfills.js"></script>\n`
     );
   }
   if (css) {
