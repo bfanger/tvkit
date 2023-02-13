@@ -40,6 +40,7 @@ export default async function serve(port, target, browser, css, ssl) {
     css,
     ssl,
   });
+  const polyfillsPromise = generatePolyfills({ browsers, minify });
   const app = express();
   app.disable("x-powered-by");
   const proxy = createProxyMiddleware({
@@ -108,16 +109,16 @@ export default async function serve(port, target, browser, css, ssl) {
     }),
   });
 
-  const tvkitPolyfills = await generatePolyfills({ browsers, minify });
-  app.get("/tvkit-polyfills.js", (req, res) => {
+  app.get("/tvkit-polyfills.js", async (req, res) => {
     if (req.headers["if-none-match"] === etag) {
       res.status(304).end();
       return;
     }
+    const body = await polyfillsPromise;
     res.setHeader("Content-Type", "application/javascript");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("ETag", etag);
-    res.send(tvkitPolyfills);
+    res.send(body);
   });
 
   if (css) {

@@ -16,6 +16,13 @@ const require = createRequire(import.meta.url);
  * @returns {Promise<string>} javascript code
  */
 export default async function generatePolyfills({ browsers, minify }) {
+  const folder = await tmpFolder(browsers);
+  const file = path.join(folder, `polyfills${minify ? ".min" : ""}.js`);
+  const cached = await fs.readFile(file, "utf8").catch(() => "");
+  if (cached) {
+    return cached;
+  }
+
   let code = "";
   const imports = [];
   for (const module of getCoreJSModules(browsers)) {
@@ -98,7 +105,6 @@ if (typeof new Error().stack !== "string") {
   }
 
   // Bundle the polyfills
-  const folder = await tmpFolder(browsers);
   const input = path.join(folder, "entry.js");
   const source = `${imports
     .map((entry) => {
@@ -120,9 +126,7 @@ if (typeof new Error().stack !== "string") {
     plugins: [commonjs(), terser({ ecma: 5, safari10: true })],
     watch: false,
   });
-  const result = await builder.generate({
-    format: "iife",
-  });
+  const result = await builder.write({ format: "iife", file });
   const output = result.output[0].code;
   if (result.output.length !== 1 && !output) {
     throw new Error("Unexpected output");
