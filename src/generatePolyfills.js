@@ -18,9 +18,10 @@ const require = createRequire(import.meta.url);
 export default async function generatePolyfills({ browsers, minify }) {
   const folder = await tmpFolder(browsers);
   const file = path.join(folder, `polyfills${minify ? ".min" : ""}.js`);
-  const cached = await fs.readFile(file, "utf8").catch(() => "");
-  if (cached) {
-    return cached;
+  const fileInfo = await fs.stat(file).catch(() => ({ mtime: 0 }));
+  const pkgInfo = await fs.stat(require.resolve("../package.json"));
+  if (fileInfo.mtime && pkgInfo.mtime < fileInfo.mtime) {
+    return fs.readFile(file, "utf8");
   }
 
   let code = "";
@@ -43,7 +44,7 @@ export default async function generatePolyfills({ browsers, minify }) {
   if (!isSupported("customevent", browsers) || isSupported("ie11", browsers)) {
     imports.push("custom-event-polyfill");
   }
-  if (!isSupported("childnode-remove", browsers)) {
+  if (!isSupported("dom-append", browsers)) {
     imports.push([
       "appendPolyfill",
       "cross-browser-polyfill/src/polyfills/element-append",

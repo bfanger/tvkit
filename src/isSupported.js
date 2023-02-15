@@ -56,6 +56,15 @@ const supportMatrix = {
     samsung: 4,
     opera: 25,
   },
+  "dom-append": {
+    chrome: 54,
+    safari: 10,
+    firefox: 49,
+    edge: 17,
+    ie: Infinity,
+    samsung: 6.2,
+    opera: 41,
+  },
   // Detect IE11
   ie11: {
     chrome: Infinity,

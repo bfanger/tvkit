@@ -2,6 +2,7 @@
 import fs from "fs/promises";
 import http from "http";
 import https from "https";
+import { createRequire } from "module";
 import express from "express";
 import {
   createProxyMiddleware,
@@ -16,6 +17,9 @@ import babelRuntime from "./babelRuntime.js";
 import isSupported from "./isSupported.js";
 import cache from "./cache.js";
 import browsersSlug from "./browsersSlug.js";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
 
 /**
  * Start the proxy server
@@ -209,12 +213,13 @@ async function tryCache(content, transformer) {
   }
 }
 
+const prefix = `W/"${pkg.name}_${pkg.version}_`;
 /**
  * @param {string} etag
  * @param {string} hash
  */
 function encodeEtag(etag, hash) {
-  return `W/"TVKIT_${hash}_${Buffer.from(etag, "ascii").toString("base64")}"`;
+  return `${prefix}${hash}_${Buffer.from(etag, "ascii").toString("base64")}"`;
 }
 
 /**
@@ -222,11 +227,11 @@ function encodeEtag(etag, hash) {
  * @param {string} hash
  */
 function decodeEtag(etag, hash) {
-  if (!etag.startsWith(`W/"TVKIT_${hash}_`)) {
+  if (!etag.startsWith(`${prefix}${hash}_`)) {
     return false;
   }
   return Buffer.from(
-    etag.substring(hash.length + 10, etag.length - 1),
+    etag.substring(hash.length + prefix.length + 1, etag.length - 1),
     "base64"
   ).toString("ascii");
 }
