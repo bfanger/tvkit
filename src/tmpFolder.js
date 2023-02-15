@@ -2,7 +2,7 @@
 import fs from "fs/promises";
 import { fileURLToPath } from "url";
 import path from "path";
-import crypto from "crypto";
+import browsersSlug from "./browsersSlug.js";
 
 /**
  * @param {string[]} browsers
@@ -18,14 +18,8 @@ export default async function tmpFolder(browsers) {
       : path.resolve(projectFolder, "node_modules/.tvkit");
 
   await fs.stat(tvkitFolder).catch(() => fs.mkdir(tvkitFolder));
-  const slug =
-    browsers.length === 1
-      ? browsers[0].replace(/ /, "_")
-      : `multiple-browsers-${crypto
-          .createHash("md5")
-          .update(JSON.stringify(browsers))
-          .digest("hex")}`;
-  const folder = path.join(tvkitFolder, slug);
+
+  const folder = path.join(tvkitFolder, browsersSlug(browsers));
   await fs.mkdir(folder, { recursive: true });
   return folder;
 }
