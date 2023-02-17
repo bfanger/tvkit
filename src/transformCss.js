@@ -7,15 +7,15 @@ const processors = {};
 
 /**
  * @param {string} css
- * @param {{  browsers: string[], from?: string }} options
+ * @param {{ browsers: string[], filename?: string }} options
  */
-export default async function transformCss(css, { browsers, from }) {
+export default async function transformCss(css, { browsers, filename }) {
   const key = browsers.join("\n");
   if (!processors[key]) {
     processors[key] = postcss([postcssPresetEnv({ browsers })]);
   }
   const result = await processors[key].process(css, {
-    from,
+    from: filename,
   });
   return result.css;
 }

@@ -2,7 +2,6 @@
 import fs from "fs/promises";
 import http from "http";
 import https from "https";
-import { createRequire } from "module";
 import express from "express";
 import {
   createProxyMiddleware,
@@ -17,9 +16,7 @@ import babelRuntime from "./babelRuntime.js";
 import isSupported from "./isSupported.js";
 import cache from "./cache.js";
 import browsersSlug from "./browsersSlug.js";
-
-const require = createRequire(import.meta.url);
-const pkg = require("../package.json");
+import pkg from "./pkg.js";
 
 /**
  * Start the proxy server
@@ -162,7 +159,7 @@ export default async function serve(port, target, browser, css, ssl) {
   app.post("/tvkit-postcss", (req, res) => {
     raw(req, res, async () => {
       const body = await tryCache(req.body.toString("utf8"), (code) =>
-        transformCss(code, { browsers, from: "tvkit-postcss.css" })
+        transformCss(code, { browsers, filename: "tvkit-postcss.css" })
       );
       res.send(body);
     });
