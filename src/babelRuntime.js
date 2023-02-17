@@ -55,12 +55,12 @@ async function resolveFilename(module) {
 }
 
 async function resolveRuntime() {
-  const base = path.dirname(fileURLToPath(import.meta.url));
-  const direct = path.resolve(base, "../node_modules/@babel/runtime");
+  const srcDir = path.dirname(fileURLToPath(import.meta.url));
+  const direct = path.resolve(srcDir, "../node_modules/@babel/runtime");
   if (await fs.stat(direct).catch(() => false)) {
     return direct;
   }
-  const peer = path.resolve(base, "../../node_modules/@babel/runtime");
+  const peer = path.resolve(srcDir, "../../../node_modules/@babel/runtime");
   if (await fs.stat(peer).catch(() => false)) {
     return peer;
   }
