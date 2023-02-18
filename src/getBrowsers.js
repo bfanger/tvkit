@@ -53,6 +53,8 @@ const aliases = {
  * @param {string} target
  */
 export default function getBrowsers(target) {
+  // eslint-disable-next-line no-param-reassign
+  target = spacelessBrowser(target);
   /** @type {Array<import('browserslist').Query & {browser?: string, version?: string}>} */
   const parsed = browserslist.parse(target);
   let tv = false;
@@ -93,4 +95,20 @@ export default function getBrowsers(target) {
       })
       .join(", ")
   );
+}
+
+/**
+ * Allow single browser & version to be passed without a space.
+ * "ie11" becomes "ie 11", "tizen5.5" becomes "tizen 5.5", etc.
+ * @param {string} target
+ */
+function spacelessBrowser(target) {
+  if (target.split(/ /).length !== 1) {
+    return target;
+  }
+  const match = target.match(/^([^0-9]+)([0-9.]+)$/);
+  if (match) {
+    return `${match[1]} ${match[2]}`;
+  }
+  return target;
 }

@@ -26,7 +26,6 @@ Yargs(hideBin(process.argv))
         type: "string",
         describe: 'The target platform. Ex: "chrome 60"',
         demandOption: true,
-        coerce: spacelessBrowser,
       });
       yargs.option("css", {
         type: "boolean",
@@ -103,19 +102,3 @@ Yargs(hideBin(process.argv))
 
   .demandCommand()
   .help("help", "").argv;
-
-/**
- * Allow single brower & version to be passed without a space.
- * "ie11" becomes "ie 11", "tizen5.5" becomes "tizen 5.5", etc.
- * @param {string} target
- */
-function spacelessBrowser(target) {
-  if (target.split(/ /).length !== 1) {
-    return target;
-  }
-  const match = target.match(/^([^0-9]+)([0-9.]+)$/);
-  if (match) {
-    return `${match[1]} ${match[2]}`;
-  }
-  return target;
-}
