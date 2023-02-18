@@ -88,7 +88,7 @@ export default async function serve(port, target, browser, css, ssl) {
           proxyRes.headers["content-type"]?.startsWith("application/javascript")
         ) {
           let code = responseBuffer.toString("utf8");
-          return tryCache(code, () => {
+          return tryCache(code, async () => {
             if (req.url === "/@vite/client") {
               if (
                 isSupported(
@@ -128,7 +128,8 @@ export default async function serve(port, target, browser, css, ssl) {
                 );
               }
             }
-            return transformJavascript(code, { browsers, root: "/" });
+            return (await transformJavascript(code, { browsers, root: "/" }))
+              .code;
           });
         }
         return responseBuffer;
@@ -175,7 +176,10 @@ export default async function serve(port, target, browser, css, ssl) {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("ETag", etag);
     const code = await tryCache(req.url, () =>
-      babelRuntime(req.url.substring(20), { browsers, minify })
+      babelRuntime(req.url.substring(20, req.url.length - 3), {
+        browsers,
+        minify,
+      })
     );
     res.send(code);
   });

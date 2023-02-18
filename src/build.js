@@ -41,7 +41,7 @@ export default async function build(
     minify,
     force,
   });
-  const babelRuntimeModules = await processFolder(folder, out, {
+  const externals = await processFolder(folder, out, {
     base: path.resolve(folder),
     browsers,
     root: "",
@@ -56,15 +56,16 @@ export default async function build(
     recursive: true,
   });
   await Promise.all(
-    Array.from(babelRuntimeModules).map(async (module) => {
-      const code = await babelRuntime(module.substring(20), {
+    Array.from(externals).map(async (module) => {
+      const code = await babelRuntime(module.substring(14), {
         browsers,
         minify,
       });
-      await fs.writeFile(path.resolve(out, `${module.substring(1)}.js`), code, {
+      const outfile = `tvkit-babel-runtime/${module.substring(15)}.js`;
+      await fs.writeFile(path.resolve(out, outfile), code, {
         encoding: "utf-8",
       });
-      console.info("✅", `${module}.js`);
+      console.info("✅", `/${outfile}`);
     })
   );
 }
@@ -82,7 +83,7 @@ async function processFolder(
   if ((await fs.stat(out).catch(() => false)) === false) {
     await fs.mkdir(out);
   }
-  const babelRuntimeModules = new Set();
+  const modules = new Set();
   const entries = await fs.readdir(folder);
   /** @type {Array<{path: string, out: string}>}  */
   const subfolders = [];
@@ -104,16 +105,14 @@ async function processFolder(
       if (entry.endsWith(".js")) {
         await processFile(base, filename, outpath, async (source) => {
           try {
-            let code = await transformJavascript(source, {
+            const { code, externals } = await transformJavascript(source, {
               browsers,
               root,
               filename,
             });
-            const matches = code.match(/\/tvkit-babel-runtime\/([^'"]+)/g);
-            matches?.forEach((module) => {
-              babelRuntimeModules.add(module);
-              code = code.replace(module, `${module}.js`);
-            });
+            for (const module of externals) {
+              modules.add(module);
+            }
             if (!minify) {
               return code;
             }
@@ -144,7 +143,7 @@ async function processFolder(
     })
   );
 
-  const processed = await Promise.all(
+  const results = await Promise.all(
     subfolders.map((subfolder) =>
       processFolder(subfolder.path, subfolder.out, {
         base,
@@ -155,10 +154,10 @@ async function processFolder(
       })
     )
   );
-  for (const additionalModules of processed) {
-    additionalModules.forEach((module) => babelRuntimeModules.add(module));
+  for (const result of results) {
+    result.forEach((module) => modules.add(module));
   }
-  return babelRuntimeModules;
+  return modules;
 }
 
 /**

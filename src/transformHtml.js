@@ -28,7 +28,7 @@ export default async function transformHtml(source, { browsers, root, css }) {
           node.setAttribute("type", "systemjs-module");
         } else if (node.textContent.length > 0) {
           node.removeAttribute("type");
-          const code = await transformJavascript(node.textContent, {
+          const { code } = await transformJavascript(node.textContent, {
             browsers,
             root,
           });
