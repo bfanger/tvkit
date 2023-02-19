@@ -271,24 +271,30 @@ function justCopyFolder(subfolder, justCopy) {
 }
 
 /**
+ * Patches private SvelteKit server code.
+ * This might break in the future.
+ *
  * @param {string} source
  * @param {string[]} browsers
  * */
 function patchSveltKitServer(source, browsers) {
   let code = source;
   // Inject polyfills
-  code = code.replace(
+  code = replaceOrFail(
+    code,
     "const init_app = `",
     "head = '<script src=\"/tvkit-polyfills.js\"></script>\\n' + head;\n\t\tconst init_app = `"
   );
   if (!isSupported("es6-module", browsers)) {
     // Remove modulepreloads
-    code = code.replace(
+    code = replaceOrFail(
+      code,
       "for (const dep of modulepreloads) {",
       "for (const dep of []) {"
     );
     // Use System.import instead of esm
-    code = code.replace(
+    code = replaceOrFail(
+      code,
       "const init_app = `",
       `const init_app = \`
 \t\t\tSystem.import(\${s(prefixed(entry.file))}).then(function (startModule) {
@@ -300,10 +306,26 @@ function patchSveltKitServer(source, browsers) {
 \t\tconst init_app_original = \``
     );
     // Don't use <script type="module"
-    code = code.replace(
+    code = replaceOrFail(
+      code,
       "const attributes = ['type=\"module\"', ",
       "const attributes = ["
     );
   }
   return code;
+}
+
+/**
+ * @param {string} code
+ * @param {string} search
+ * @param {string} replacement
+ */
+function replaceOrFail(code, search, replacement) {
+  const result = code.replace(search, replacement);
+  if (result === code) {
+    throw new Error(
+      `Failed to patch server code, could not find:\n\n${search}\n`
+    );
+  }
+  return result;
 }

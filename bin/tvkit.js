@@ -91,6 +91,11 @@ Yargs(hideBin(process.argv))
       });
     },
     (argv) => {
+      if (argv.out === "") {
+        throw new Error(
+          "No output folder specified, check the `--out` is using double dash and followed by a value"
+        );
+      }
       // @ts-ignore
       build(argv.folder, argv.out, argv.browser, {
         css: argv.css,
