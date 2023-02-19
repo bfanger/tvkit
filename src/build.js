@@ -35,28 +35,19 @@ export default async function build(
   }
   const browsers = getBrowsers(browser);
   const input = path.resolve(folder);
-  const framework = await detectFramework(folder);
+  const { publicFolder, justCopy, sveltekit } = await detectPreset(folder);
   console.info("[tvkit]", {
     input,
     output: path.resolve(out),
+    sveltekit,
+    public: publicFolder,
     browsers,
-    framework,
     css,
     minify,
     force,
   });
-  const publicPrefix = framework === "SvelteKit" ? "/client/" : "/";
-  const publicFolder = path.join(out, publicPrefix.substring(1));
-  const justCopy =
-    framework === "SvelteKit"
-      ? [
-          path.resolve(folder, "server"),
-          path.resolve(folder, "index.js"),
-          path.resolve(folder, "env.js"),
-          path.resolve(folder, "shims.js"),
-          path.resolve(folder, "handler.js"),
-        ]
-      : false;
+  const publicPath = path.join(out, publicFolder.substring(1));
+
   const externals = await processFolder(folder, out, {
     base: path.resolve(folder),
     browsers,
@@ -67,13 +58,13 @@ export default async function build(
   });
   await generatePolyfills({ browsers, minify }).then(async (code) => {
     await fs.writeFile(
-      path.resolve(publicFolder, "tvkit-polyfills.js"),
+      path.resolve(publicPath, "tvkit-polyfills.js"),
       code,
       "utf-8"
     );
-    console.info("✅", `${publicPrefix}tvkit-polyfills.js`);
+    console.info("✅", `${publicFolder}tvkit-polyfills.js`);
   });
-  await fs.mkdir(path.resolve(publicFolder, "tvkit-babel-runtime/helpers"), {
+  await fs.mkdir(path.resolve(publicPath, "tvkit-babel-runtime/helpers"), {
     recursive: true,
   });
   await Promise.all(
@@ -83,21 +74,24 @@ export default async function build(
         minify,
       });
       const outfile = `tvkit-babel-runtime/${module.substring(15)}.js`;
-      await fs.writeFile(path.resolve(publicFolder, outfile), code, {
+      await fs.writeFile(path.resolve(publicPath, outfile), code, {
         encoding: "utf-8",
       });
-      console.info("✅", `${publicPrefix}${outfile}`);
+      console.info("✅", `${publicFolder}${outfile}`);
     })
   );
-  if (framework === "SvelteKit") {
-    const code = patchSveltKitServer(
-      await fs.readFile(path.resolve(folder, "server/index.js"), "utf-8"),
-      browsers
+  if (sveltekit) {
+    let code = await fs.readFile(
+      path.resolve(folder, sveltekit.substring(1)),
+      "utf-8"
     );
-    await fs.writeFile(path.resolve(out, "server/index.js"), code, {
-      encoding: "utf-8",
-    });
-    console.info("🩹", `/server/index.js`);
+    code = patchSveltKitServer(code, browsers);
+    await fs.writeFile(
+      path.resolve(out, sveltekit.substring(1)),
+      code,
+      "utf-8"
+    );
+    console.info("🩹", sveltekit);
   }
 }
 
@@ -112,7 +106,7 @@ async function processFolder(
   { base, browsers, root, css, minify, justCopy }
 ) {
   if ((await fs.stat(out).catch(() => false)) === false) {
-    await fs.mkdir(out);
+    await fs.mkdir(out, { recursive: true });
   }
   /** @type {string[]} */
   const externals = [];
@@ -215,14 +209,49 @@ async function processFile(base, input, output, transformer) {
 }
 
 /** @param {string} folder */
-async function detectFramework(folder) {
-  const sveltekit = await fs
-    .readFile(path.resolve(folder, "handler.js"))
-    .then(
-      (content) => content.toString().indexOf("import('@sveltejs/kit") !== -1
-    )
-    .catch(() => false);
-  return sveltekit ? "SvelteKit" : "";
+async function detectPreset(folder) {
+  if (
+    await fs
+      .readFile(path.resolve(folder, "handler.js"))
+      .then(
+        (content) => content.toString().indexOf("import('@sveltejs/kit") !== -1
+      )
+      .catch(() => false)
+  ) {
+    // SvelteKit (node)
+    return {
+      publicFolder: "/client/",
+      justCopy: [
+        path.resolve(folder, "server"),
+        path.resolve(folder, "index.js"),
+        path.resolve(folder, "env.js"),
+        path.resolve(folder, "shims.js"),
+        path.resolve(folder, "handler.js"),
+      ],
+      sveltekit: "/server/index.js",
+    };
+  }
+  if (
+    await fs
+      .stat(
+        path.resolve(
+          folder,
+          "functions/fn.func/.svelte-kit/output/server/index.js"
+        )
+      )
+      .catch(() => false)
+  ) {
+    // SvelteKit (vercel)
+    return {
+      publicFolder: "/static/",
+      justCopy: [path.resolve(folder, "functions")],
+      sveltekit: "/functions/fn.func/.svelte-kit/output/server/index.js",
+    };
+  }
+  return {
+    publicFolder: "/",
+    justCopy: false,
+  };
 }
 
 /**
