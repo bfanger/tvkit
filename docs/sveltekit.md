@@ -33,7 +33,7 @@ export default {
 
 and process the output directory with `tvkit build`:
 
-```json
+```json5
 // package.json
 "scripts": {
   "build": "vite build && tvkit build ./build --out ./dist --browser \"Tizen 6, WebOS 6\"",
@@ -51,7 +51,7 @@ When using the [node adapter](https://kit.svelte.dev/docs/adapter-node)
 
 Similar to the static adapter, but TVKit will detect the build directory is using sveltekit node adapter layout and adapts accordingly.
 
-```json
+```json5
 // package.json
 "scripts": {
   "build": "vite build && tvkit build ./build --out ./dist --browser \"Tizen 6, WebOS 6\"",
@@ -66,7 +66,7 @@ In the project settings use de Framework Preset "SvelteKit" and override for the
 
 And update the build script to:
 
-```json
+```json5
 // package.json
 "scripts": {
   "build": "vite build && tvkit build --browser \"Tizen 6, WebOS 6\" ./.vercel/output --out ./.vercel/output --force",

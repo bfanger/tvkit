@@ -30,15 +30,15 @@ Yargs(hideBin(process.argv))
       yargs.option("css", {
         type: "boolean",
         default: true,
-        describe: "Use --no-css to skip transpiling CSS",
+        describe: "Use --no-css to skip transpiling css",
       });
       yargs.option("ssl-cert", {
         type: "string",
-        describe: "path to SSL certificate for HTTPS",
+        describe: "Path to the ssl certificate for https",
       });
       yargs.option("ssl-key", {
         type: "string",
-        describe: "path to SSL certificate's private key",
+        describe: "Path to the ssl certificate's private key",
       });
     },
     async (argv) => {
@@ -76,7 +76,7 @@ Yargs(hideBin(process.argv))
       yargs.option("css", {
         type: "boolean",
         default: true,
-        describe: "Use --no-css to skip transpiling CSS",
+        describe: "Use --no-css to skip transpiling css",
       });
       yargs.option("minify", {
         type: "boolean",
