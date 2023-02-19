@@ -40,6 +40,9 @@ async function resolveFilename(module) {
   const runtime = await resolveRuntime();
   const modulePath = module.substring(1);
   const exact = path.resolve(runtime, modulePath);
+  if (exact.startsWith(runtime) === false) {
+    throw new Error(`Blocked request for ${exact}`);
+  }
   if (await isFile(exact)) {
     return exact;
   }

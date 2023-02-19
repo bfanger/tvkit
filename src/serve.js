@@ -108,22 +108,31 @@ export default async function serve(port, target, browser, css, ssl) {
                   );
               }
               if (css) {
-                // Add client side  caching?, sessionStorage?
+                // Add client side caching?, sessionStorage?
                 code = code.replace(
                   "function updateStyle(id, content) {",
-                  `const updateStyleAsync = {};
-  async function updateStyle(id, content) {
+                  `var updateStyleAsync = {};
+  function updateStyle(id, content) {
+    var current = {};
     updateStyleSync(id, content); // fast update (without postcss applied)
-    const current = {}
-    updateStyleAsync[id] = current; 
-    const response = await fetch('/tvkit-postcss', { method: 'POST', body: content, headers: { 'Content-Type': 'text/css' } });
-    if (response.ok) {
-      const css = await response.text();
-      if (updateStyleAsync[id] === current) {
-        updateStyleSync(id, css);
+    updateStyleAsync[id] = current;
+    return fetch("/tvkit-postcss", {
+      method: "POST",
+      body: content,
+      headers: { "Content-Type": "text/css" },
+    }).then(function (response) {
+      if (!response.ok) {
+        return;
       }
-    }
+      return response.text().then(function (css) {
+        if (updateStyleAsync[id] === current) {
+          removeStyle(id);
+          updateStyleSync(id, css);
+        }
+      });
+    });
   }
+
   function updateStyleSync(id, content) {`
                 );
               }
@@ -181,6 +190,10 @@ export default async function serve(port, target, browser, css, ssl) {
         minify,
       })
     );
+    if (code === req.url) {
+      res.status(500).end();
+      return;
+    }
     res.send(code);
   });
   app.use(proxy);
