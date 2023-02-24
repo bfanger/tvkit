@@ -21,18 +21,28 @@ export default async function transformHtml(source, { browsers, root, css }) {
     });
     await Promise.all(
       ast.querySelectorAll("script").map(async (node) => {
-        if (node.getAttribute("type") !== "module") {
+        if (
+          node.getAttribute("type") !== "module" &&
+          node.hasAttribute("src")
+        ) {
           return;
         }
         if (node.hasAttribute("src")) {
           node.setAttribute("type", "systemjs-module");
         } else if (node.textContent.length > 0) {
-          node.removeAttribute("type");
-          const { code } = await transformJavascript(node.textContent, {
-            browsers,
-            root,
-          });
-          node.set_content(code);
+          if (
+            node.getAttribute("type") === "module" ||
+            node.textContent.includes("import(")
+          ) {
+            const { code } = await transformJavascript(node.textContent, {
+              browsers,
+              root,
+              inline: node.getAttribute("type") !== "module",
+            });
+            node.removeAttribute("type");
+
+            node.set_content(code);
+          }
         }
       })
     );

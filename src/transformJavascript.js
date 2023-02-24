@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { transformAsync } from "@babel/core";
 import { Parser } from "acorn";
+import * as walk from "acorn-walk";
 import MagicString from "magic-string";
 import isSupported from "./isSupported.js";
 
@@ -11,12 +12,12 @@ import isSupported from "./isSupported.js";
  * Convert source to a module that is compatible with the given browsers.
  *
  * @param {string} source
- * @param {{browsers: string[], root: string, filename?: string}} options
+ * @param {{browsers: string[], root: string, filename?: string, inline?: boolean}} options
  * @returns {Promise<{code: string, externals: string[]}>}
  */
 export default async function transformJavascript(
   source,
-  { browsers, root, filename }
+  { browsers, root, filename, inline = false }
 ) {
   /** @type {string[]} */
   const externals = [];
@@ -33,6 +34,14 @@ export default async function transformJavascript(
       ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
     );
   }
+  const esm = isSupported(
+    ["es6-module", "es6-module-dynamic-import"],
+    browsers
+  );
+  let modules = esm ? false : "systemjs";
+  if (inline) {
+    modules = false;
+  }
   const result = await transformAsync(code, {
     configFile: false,
     babelrc: false,
@@ -44,19 +53,15 @@ export default async function transformJavascript(
       [
         "@babel/preset-env",
         {
-          modules: isSupported(
-            ["es6-module", "es6-module-dynamic-import"],
-            browsers
-          )
-            ? false
-            : "systemjs",
+          modules,
           useBuiltIns: false,
           targets: browsers,
           spec: true,
         },
       ],
     ],
-    plugins: ["@babel/plugin-transform-runtime"],
+    // No external runtime, as it would make the synchronous execution of the inline script synchronous
+    plugins: inline ? [] : ["@babel/plugin-transform-runtime"],
   });
   if (typeof result?.code !== "string") {
     console.warn(
@@ -67,7 +72,7 @@ export default async function transformJavascript(
     return { code, externals };
   }
   code = result?.code;
-  if (code.indexOf("@babel/runtime/") !== -1) {
+  if (code.indexOf("@babel/runtime/") !== -1 || inline) {
     /** @type {any} */
     const ast = Parser.parse(code, {
       ecmaVersion: "latest",
@@ -111,6 +116,15 @@ export default async function transformJavascript(
           }
         }
       }
+    }
+
+    if (inline && !esm) {
+      walk.simple(ast, {
+        // Replace `import()` with `System.import()`
+        ImportExpression(node) {
+          ms.overwrite(node.start, node.start + 6, "System.import");
+        },
+      });
     }
     return { code: ms.toString(), externals };
   }
