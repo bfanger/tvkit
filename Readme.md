@@ -40,7 +40,7 @@ Use [concurrently](https://github.com/open-cli-tools/concurrently) to start both
 
 ## Usage (build)
 
-> Experimental feature
+> Experimental feature  
 > Use alternative [@vitejs/plugin-legacy](https://www.npmjs.com/package/@vitejs/plugin-legacy) if you can.
 
 ```sh

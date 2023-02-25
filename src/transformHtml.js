@@ -19,36 +19,36 @@ export default async function transformHtml(source, { browsers, root, css }) {
     ast.querySelectorAll('link[rel="modulepreload"]').forEach((node) => {
       node.remove();
     });
-    await Promise.all(
-      ast.querySelectorAll("script").map(async (node) => {
-        if (
-          node.getAttribute("type") !== "module" &&
-          node.hasAttribute("src")
-        ) {
-          return;
-        }
-        if (node.hasAttribute("src")) {
-          node.setAttribute("type", "systemjs-module");
-        } else if (node.textContent.length > 0) {
-          if (
-            node.getAttribute("type") === "module" ||
-            node.textContent.includes("import(")
-          ) {
-            const { code } = await transformJavascript(node.textContent, {
-              browsers,
-              root,
-              inline: node.getAttribute("type") !== "module",
-            });
-            node.removeAttribute("type");
-
-            node.set_content(code);
-          }
-        }
-      })
-    );
+    ast.querySelectorAll("script").forEach((node) => {
+      if (node.hasAttribute("src") && node.getAttribute("type") === "module") {
+        node.setAttribute("type", "systemjs-module");
+      }
+    });
   }
-  const script = ast.querySelector("script");
+  await Promise.all(
+    ast.querySelectorAll("script").map(async (node) => {
+      if (node.hasAttribute("src") || node.textContent.length === 0) {
+        return;
+      }
+      const type = node.getAttribute("type");
+      if (
+        typeof type === "undefined" ||
+        ["module", "text/javascript", "application/javascript"].includes(type)
+      ) {
+        const { code } = await transformJavascript(node.textContent, {
+          browsers,
+          root,
+          inline: node.getAttribute("type") !== "module",
+        });
+        if (!esm && node.getAttribute("type") === "module") {
+          node.removeAttribute("type");
+        }
+        node.set_content(code);
+      }
+    })
+  );
 
+  const script = ast.querySelector("script");
   if (script) {
     script.insertAdjacentHTML(
       "beforebegin",

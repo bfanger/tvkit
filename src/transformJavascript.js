@@ -79,7 +79,16 @@ export default async function transformJavascript(
       sourceType: "module",
     });
     const ms = new MagicString(code);
+    if (!esm) {
+      // Replace `import()` with `System.import()`
+      walk.simple(ast, {
+        ImportExpression(node) {
+          ms.overwrite(node.start, node.start + 6, "System.import");
+        },
+      });
+    }
     for (const node of ast.body) {
+      // Replace `import "@babel/runtime/..."` with `import "${root}tvkit-babel-runtime/..."`
       if (
         node.type === "ImportDeclaration" &&
         node.source.value.indexOf("@babel/runtime/") !== -1
@@ -118,15 +127,7 @@ export default async function transformJavascript(
       }
     }
 
-    if (inline && !esm) {
-      walk.simple(ast, {
-        // Replace `import()` with `System.import()`
-        ImportExpression(node) {
-          ms.overwrite(node.start, node.start + 6, "System.import");
-        },
-      });
-    }
-    return { code: ms.toString(), externals };
+    code = ms.toString();
   }
 
   return { code, externals };
