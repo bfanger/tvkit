@@ -272,7 +272,8 @@ function justCopyFolder(subfolder, justCopy) {
 
 /**
  * Patches private SvelteKit server code.
- * This might break in the future.
+ * This is fragile and breaks between SvelteKit releases, tvkit only supports one version.
+ * To keep using tvkit with an older version of SvelteKit, you must also use an older version of tvkit.
  *
  * @param {string} source
  * @param {string[]} browsers
@@ -289,35 +290,18 @@ function patchSveltKitServer(source, browsers) {
     // Remove modulepreloads
     code = replaceOrFail(
       code,
-      "for (const dep of modulepreloads) {",
-      "for (const dep of []) {"
+      "for (const path of included_modulepreloads) {",
+      "for (const path of []) {"
     );
     // Use System.import instead of esm
-    code = replaceOrFail(
-      code,
-      "const init_app = `",
-      `const init_app = \`
-\t\t\tSystem.import(\${s(prefixed(entry.file))}).then(function (startModule) {
-\t\t\t\tstartModule.start({
-\t\t\t\t\t\${opts.join(",\\n				")}
-\t\t\t\t});
-\t\t\t});
-\t\t\`;
-\t\tconst init_app_original = \``
-    );
-    // Don't use <script type="module"
-    code = replaceOrFail(
-      code,
-      "const attributes = ['type=\"module\"', ",
-      "const attributes = ["
-    );
+    code = replaceOrFail(code, /\timport\(/gm, "\tSystem.import(");
   }
   return code;
 }
 
 /**
  * @param {string} code
- * @param {string} search
+ * @param {string | RegExp} search
  * @param {string} replacement
  */
 function replaceOrFail(code, search, replacement) {
