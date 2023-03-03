@@ -24,10 +24,16 @@ import pkg from "./pkg.js";
  * @param {number} port http port for the proxy server
  * @param {string} target url to proxy
  * @param {string} browser browserslist compatible browser
- * @param {boolean} css Also transform css
  * @param {{cert: string, key: string} | false} ssl
+ * @param {{css:boolean,minify:boolean}} flags Also transform css
  */
-export default async function serve(port, target, browser, css, ssl) {
+export default async function serve(
+  port,
+  target,
+  browser,
+  ssl,
+  { css, minify }
+) {
   const browsers = getBrowsers(browser);
 
   console.info("[tvkit]", {
@@ -35,9 +41,9 @@ export default async function serve(port, target, browser, css, ssl) {
     target,
     browsers,
     css,
+    minify,
     ssl,
   });
-  const minify = true;
   const modifiedSince = new Map();
   const polyfillsPromise = generatePolyfills({ browsers, minify });
   const slug = browsersSlug(browsers);

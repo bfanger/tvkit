@@ -40,9 +40,14 @@ Yargs(hideBin(process.argv))
         type: "string",
         describe: "Path to the ssl certificate's private key",
       });
+      yargs.option("minify", {
+        type: "boolean",
+        default: true,
+        describe: "Use --no-minify to skip minification",
+      });
     },
     async (argv) => {
-      /** @type {Parameters<typeof serve>[4]} */
+      /** @type {Parameters<typeof serve>[3]} */
       let ssl = false;
       if (typeof argv.sslCert === "string" && typeof argv.sslKey === "string") {
         ssl = {
@@ -51,7 +56,10 @@ Yargs(hideBin(process.argv))
         };
       }
       // @ts-ignore
-      serve(argv.port, argv.target, argv.browser, argv.css, ssl);
+      serve(argv.port, argv.target, argv.browser, ssl, {
+        css: argv.css,
+        minify: argv.minify,
+      });
     }
   )
   .command(

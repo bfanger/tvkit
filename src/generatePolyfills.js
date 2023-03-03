@@ -132,11 +132,7 @@ if (typeof new Error().stack !== "string") {
   if (minify) {
     plugins.push(terser({ ecma: 5, safari10: true }));
   }
-  const builder = await rollup({
-    input,
-    plugins: [commonjs(), terser({ ecma: 5, safari10: true })],
-    watch: false,
-  });
+  const builder = await rollup({ input, plugins, watch: false });
   const result = await builder.write({ format: "iife", file });
   const output = result.output[0].code;
   if (result.output.length !== 1 && !output) {
