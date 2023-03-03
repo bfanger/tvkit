@@ -81,7 +81,17 @@ if (!Event.prototype.composedPath) {
 }
 `;
   }
-
+  if (!isSupported("document-currentscript", browsers)) {
+    code += `
+if (!document.currentScript) {
+  Object.defineProperty(document, "currentScript", {
+    get: function() {
+      return document.scripts[document.scripts.length - 1];
+    }
+  });
+}
+`;
+  }
   // SvelteKit specific polyfills
   code += `
 window.__SVELTEKIT_APP_VERSION_POLL_INTERVAL__ =
