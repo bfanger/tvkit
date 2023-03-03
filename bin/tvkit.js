@@ -32,6 +32,14 @@ Yargs(hideBin(process.argv))
         default: true,
         describe: "Use --no-css to skip transpiling css",
       });
+      yargs.option("add", {
+        type: "string",
+        describe: "Override features (adds polyfills)",
+      });
+      yargs.option("remove", {
+        type: "string",
+        describe: "Override features (skips polyfills)",
+      });
       yargs.option("ssl-cert", {
         type: "string",
         describe: "Path to the ssl certificate for https",
@@ -42,12 +50,11 @@ Yargs(hideBin(process.argv))
       });
       yargs.option("minify", {
         type: "boolean",
-        default: true,
-        describe: "Use --no-minify to skip minification",
+        describe: "Toggle minification for polyfills",
       });
     },
     async (argv) => {
-      /** @type {Parameters<typeof serve>[3]} */
+      /** @type {Parameters<typeof serve>[4]} */
       let ssl = false;
       if (typeof argv.sslCert === "string" && typeof argv.sslKey === "string") {
         ssl = {
@@ -55,11 +62,18 @@ Yargs(hideBin(process.argv))
           key: argv.sslKey,
         };
       }
-      // @ts-ignore
-      serve(argv.port, argv.target, argv.browser, ssl, {
-        css: argv.css,
-        minify: argv.minify,
-      });
+      serve(
+        // @ts-ignore
+        argv.port,
+        argv.target,
+        argv.browser,
+        overrides(argv.add, argv.remove),
+        ssl,
+        {
+          css: argv.css,
+          minify: argv.minify,
+        }
+      );
     }
   )
   .command(
@@ -97,6 +111,14 @@ Yargs(hideBin(process.argv))
         default: false,
         describe: "Overwrite output folder if it exists",
       });
+      yargs.option("add", {
+        type: "string",
+        describe: "Override features (adds polyfills)",
+      });
+      yargs.option("remove", {
+        type: "string",
+        describe: "Override features (skips polyfills)",
+      });
     },
     (argv) => {
       if (argv.out === "") {
@@ -104,14 +126,40 @@ Yargs(hideBin(process.argv))
           "No output folder specified, check the `--out` is using double dash and followed by a value"
         );
       }
-      // @ts-ignore
-      build(argv.folder, argv.out, argv.browser, {
-        css: argv.css,
-        minify: argv.minify,
-        force: argv.force,
-      });
+      build(
+        // @ts-ignore
+        argv.folder,
+        argv.out,
+        argv.browser,
+        overrides(argv.add, argv.remove),
+        {
+          css: argv.css,
+          minify: argv.minify,
+          force: argv.force,
+        }
+      );
     }
   )
 
   .demandCommand()
   .help("help", "").argv;
+
+/**
+ * @param {unknown} add
+ * @param {unknown} remove
+ */
+function overrides(add, remove) {
+  /** @type {Record<string, boolean>} */
+  const supports = {};
+  if (typeof remove === "string") {
+    for (const feature of remove.split(",")) {
+      supports[feature] = true;
+    }
+  }
+  if (typeof add === "string") {
+    for (const feature of add.split(",")) {
+      supports[feature] = false;
+    }
+  }
+  return supports;
+}

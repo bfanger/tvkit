@@ -12,11 +12,15 @@ import isSupported from "./isSupported.js";
 const require = createRequire(import.meta.url);
 
 /**
- * @param {{browsers: string[], minify: boolean}} options
+ * @param {{browsers: string[], supports: Record<string, boolean>, minify: boolean}} options
  * @returns {Promise<string>} javascript code
  */
-export default async function generatePolyfills({ browsers, minify }) {
-  const folder = await tmpFolder(browsers);
+export default async function generatePolyfills({
+  browsers,
+  supports,
+  minify,
+}) {
+  const folder = await tmpFolder(browsers, supports);
   const file = path.join(folder, `polyfills${minify ? ".min" : ""}.js`);
   const fileInfo = await fs.stat(file).catch(() => ({ mtime: 0 }));
   const pkgInfo = await fs.stat(require.resolve("../package.json"));
@@ -26,7 +30,7 @@ export default async function generatePolyfills({ browsers, minify }) {
 
   let code = "";
   const imports = [];
-  for (const module of getCoreJSModules(browsers)) {
+  for (const module of getCoreJSModules(browsers, supports)) {
     imports.push(`core-js/modules/${module}`);
   }
   if (!isSupported("fetch", browsers)) {
@@ -143,8 +147,9 @@ if (typeof new Error().stack !== "string") {
 
 /**
  * @param {string[]} targets
+ * @param {Record<string, boolean>} supports
  */
-function getCoreJSModules(targets) {
+function getCoreJSModules(targets, supports) {
   const exclude = [
     "es.array.push",
     "es.regexp.flags",
@@ -152,15 +157,28 @@ function getCoreJSModules(targets) {
     "web.immediate",
   ];
   const compatData = require("core-js-compat/data.json");
+  const forced = [];
   for (const [feature, browsers] of Object.entries(compatData)) {
+    if (feature in supports) {
+      if (supports[feature]) {
+        exclude.push(feature);
+      } else {
+        forced.push(feature);
+      }
+      // eslint-disable-next-line no-continue
+      continue;
+    }
     if (feature.startsWith("esnext.")) {
       exclude.push(feature); // Exclude unstable javascript features
     } else if (Object.keys(browsers).length === 0) {
       exclude.push(feature); // Exclude features that are not supported by any browser.
     }
   }
-  return compat({
-    targets,
-    exclude,
-  }).list;
+  return [
+    ...forced,
+    ...compat({
+      targets,
+      exclude,
+    }).list,
+  ];
 }

@@ -8,7 +8,7 @@ import transformHtml from "./transformHtml.js";
 import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
 import babelRuntime from "./babelRuntime.js";
-import isSupported from "./isSupported.js";
+import isSupported, { setOverrides } from "./isSupported.js";
 
 /**
  * Copy files from input to output folder and transform the html, javascript and css files.
@@ -16,6 +16,7 @@ import isSupported from "./isSupported.js";
  * @param {string} folder The input folder
  * @param {string} out The output folder
  * @param {string} browser browserslist compatible browser
+ * @param {Record<string, boolean>} supports Override features
  * @param {{css: boolean, minify:boolean, force:boolean}} flags
  * flags.css: Also transform css
  * flags.minify: Minify output
@@ -25,6 +26,7 @@ export default async function build(
   folder,
   out,
   browser,
+  supports,
   { css, minify, force }
 ) {
   if (!force && (await fs.stat(out).catch(() => false))) {
@@ -34,6 +36,7 @@ export default async function build(
     process.exit(1);
   }
   const browsers = getBrowsers(browser);
+  setOverrides(supports);
   const input = path.resolve(folder);
   const { publicFolder, justCopy, sveltekit } = await detectPreset(folder);
   console.info("[tvkit]", {
@@ -42,6 +45,7 @@ export default async function build(
     sveltekit,
     public: publicFolder,
     browsers,
+    supports,
     css,
     minify,
     force,
@@ -56,7 +60,7 @@ export default async function build(
     minify,
     justCopy,
   });
-  await generatePolyfills({ browsers, minify }).then(async (code) => {
+  await generatePolyfills({ browsers, supports, minify }).then(async (code) => {
     await fs.writeFile(
       path.resolve(publicPath, "tvkit-polyfills.js"),
       code,

@@ -1,6 +1,9 @@
 // @ts-check
 import caniuse from "caniuse-lite";
 
+/** @type {Record<string, boolean>} */
+let overrides = {};
+
 /**
  * @param {string|string[]} featureOrFeatures
  * @param {string[]} targets
@@ -82,6 +85,9 @@ const supportMatrix = {
  * @param {string[]} browsers
  */
 function featureIsSupported(feature, browsers) {
+  if (feature in overrides) {
+    return overrides[feature];
+  }
   if (feature in supportMatrix) {
     return inSupportMatrix(feature, browsers);
   }
@@ -143,4 +149,11 @@ function inSupportMatrix(feature, browsers) {
     }
   }
   return true;
+}
+
+/**
+ * @param {Record<string, boolean>} supports
+ */
+export function setOverrides(supports) {
+  overrides = supports;
 }

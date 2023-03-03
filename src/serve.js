@@ -13,7 +13,7 @@ import transformJavascript from "./transformJavascript.js";
 import transformCss from "./transformCss.js";
 import generatePolyfills from "./generatePolyfills.js";
 import babelRuntime from "./babelRuntime.js";
-import isSupported from "./isSupported.js";
+import isSupported, { setOverrides } from "./isSupported.js";
 import cache from "./cache.js";
 import browsersSlug from "./browsersSlug.js";
 import pkg from "./pkg.js";
@@ -24,29 +24,35 @@ import pkg from "./pkg.js";
  * @param {number} port http port for the proxy server
  * @param {string} target url to proxy
  * @param {string} browser browserslist compatible browser
+ * @param {Record<string, boolean>} supports Override features
  * @param {{cert: string, key: string} | false} ssl
- * @param {{css:boolean,minify:boolean}} flags Also transform css
+ * @param {{css: boolean, minify?: boolean}} flags
  */
 export default async function serve(
   port,
   target,
   browser,
+  supports,
   ssl,
   { css, minify }
 ) {
   const browsers = getBrowsers(browser);
+  setOverrides(supports);
+  // eslint-disable-next-line no-param-reassign
+  minify = minify ?? true;
 
   console.info("[tvkit]", {
     port,
     target,
     browsers,
+    supports,
     css,
-    minify,
     ssl,
   });
+
   const modifiedSince = new Map();
-  const polyfillsPromise = generatePolyfills({ browsers, minify });
-  const slug = browsersSlug(browsers);
+  const polyfillsPromise = generatePolyfills({ browsers, supports, minify });
+  const slug = browsersSlug(browsers, supports);
 
   const proxy = createProxyMiddleware({
     target,
