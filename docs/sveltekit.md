@@ -6,7 +6,7 @@ https://github.com/sveltejs/kit/issues/12, https://github.com/sveltejs/kit/pull/
 This isn't big problem for webdevelopers, as [ES6-modules has excellent browser support](https://caniuse.com/es6-module).
 
 But for SmartTV development thats another story:
-A Samsung TV from 2018 (Tizen 4) uses the render engine from Januari 2017 (Chrome 56) and will never update.
+A Samsung TV from 2018 (Tizen 4) uses the render engine from January 2017 (Chrome 56) and will never update.
 
 ## Development
 
