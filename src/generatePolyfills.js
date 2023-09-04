@@ -111,11 +111,11 @@ if (typeof new Error().stack !== "string") {
   if (!isSupported(["es6-module", "es6-module-dynamic-import"], browsers)) {
     const systemJs = await fs.readFile(
       require.resolve("systemjs/dist/s.min.js"),
-      "utf8"
+      "utf8",
     );
     code += systemJs.substring(
       systemJs.indexOf("*/") + 2,
-      systemJs.indexOf("# sourceMappingURL=")
+      systemJs.indexOf("# sourceMappingURL="),
     );
   }
 
@@ -127,7 +127,7 @@ if (typeof new Error().stack !== "string") {
         return `import ${JSON.stringify(require.resolve(entry))};`;
       }
       return `import ${entry[0]} from ${JSON.stringify(
-        require.resolve(entry[1])
+        require.resolve(entry[1]),
       )};`;
     })
     .join("\n")}\n${code}`;

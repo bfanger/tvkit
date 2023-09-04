@@ -11,7 +11,7 @@ import browsersSlug from "./browsersSlug.js";
 export default async function tmpFolder(browsers, supports) {
   // generating into the node_modules folder prevents pm2 from restarting.
   const projectFolder = path.dirname(
-    path.dirname(fileURLToPath(import.meta.url))
+    path.dirname(fileURLToPath(import.meta.url)),
   );
   const tvkitFolder =
     path.basename(path.dirname(projectFolder)) === "node_modules"

@@ -11,7 +11,7 @@ let overrides = {};
 export default function isSupported(featureOrFeatures, targets) {
   if (Array.isArray(featureOrFeatures)) {
     return featureOrFeatures.every((feature) =>
-      featureIsSupported(feature, targets)
+      featureIsSupported(feature, targets),
     );
   }
   return featureIsSupported(featureOrFeatures, targets);
@@ -103,7 +103,7 @@ function featureIsSupported(feature, browsers) {
     const support = data.stats[browser]?.[version];
     if (!support) {
       console.warn(
-        `No stats available for feature "${feature}" in combination with "${browserFull}"`
+        `No stats available for feature "${feature}" in combination with "${browserFull}"`,
       );
       return false;
     }

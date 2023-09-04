@@ -27,11 +27,11 @@ export default async function build(
   out,
   browser,
   supports,
-  { css, minify, force }
+  { css, minify, force },
 ) {
   if (!force && (await fs.stat(out).catch(() => false))) {
     process.stderr.write(
-      "\noutput folder already exists, use --force to overwrite\n\n"
+      "\noutput folder already exists, use --force to overwrite\n\n",
     );
     process.exit(1);
   }
@@ -64,7 +64,7 @@ export default async function build(
     await fs.writeFile(
       path.resolve(publicPath, "tvkit-polyfills.js"),
       code,
-      "utf-8"
+      "utf-8",
     );
     console.info("✅", `${publicFolder}tvkit-polyfills.js`);
   });
@@ -82,18 +82,18 @@ export default async function build(
         encoding: "utf-8",
       });
       console.info("✅", `${publicFolder}${outfile}`);
-    })
+    }),
   );
   if (sveltekit) {
     let code = await fs.readFile(
       path.resolve(folder, sveltekit.substring(1)),
-      "utf-8"
+      "utf-8",
     );
     code = patchSveltKitServer(code, browsers);
     await fs.writeFile(
       path.resolve(out, sveltekit.substring(1)),
       code,
-      "utf-8"
+      "utf-8",
     );
     console.info("🩹", sveltekit);
   }
@@ -107,7 +107,7 @@ export default async function build(
 async function processFolder(
   folder,
   out,
-  { base, browsers, root, css, minify, justCopy }
+  { base, browsers, root, css, minify, justCopy },
 ) {
   if ((await fs.stat(out).catch(() => false)) === false) {
     await fs.mkdir(out, { recursive: true });
@@ -146,7 +146,7 @@ async function processFolder(
                   browsers,
                   root,
                   filename,
-                }
+                },
               );
               externals.push(...nested);
               if (!minify) {
@@ -159,18 +159,18 @@ async function processFolder(
               return minified.code ?? code;
             } catch (/** @type {any} */ err) {
               process.stderr.write(
-                `❌ ${filename.substring(base.length)}\n\n${err?.message}`
+                `❌ ${filename.substring(base.length)}\n\n${err?.message}`,
               );
               return process.exit(1);
             }
           });
         } else if (entry.endsWith(".html") || entry.endsWith(".htm")) {
           await processFile(base, filename, outpath, (source) =>
-            transformHtml(source, { browsers, root, css })
+            transformHtml(source, { browsers, root, css }),
           );
         } else if (css && entry.endsWith(".css")) {
           await processFile(base, filename, outpath, (source) =>
-            transformCss(source, { browsers, filename })
+            transformCss(source, { browsers, filename }),
           );
         } else {
           await fs.copyFile(filename, outpath);
@@ -180,7 +180,7 @@ async function processFolder(
         await fs.copyFile(filename, outpath);
         console.info("⏩", filename.substring(base.length));
       }
-    })
+    }),
   );
 
   const results = await Promise.all(
@@ -192,8 +192,8 @@ async function processFolder(
         root: `${root}../`,
         css,
         justCopy: justCopyFolder(subfolder.path, justCopy),
-      })
-    )
+      }),
+    ),
   );
   externals.push(...results.flat(1));
   return externals;
@@ -216,9 +216,9 @@ async function processFile(base, input, output, transformer) {
 async function detectPreset(folder) {
   if (
     await fs
-      .readFile(path.resolve(folder, "handler.js"))
+      .readFile(path.resolve(folder, "server/index.js"))
       .then(
-        (content) => content.toString().indexOf("import('@sveltejs/kit") !== -1
+        (content) => content.toString().indexOf("import('@sveltejs/kit") !== -1,
       )
       .catch(() => false)
   ) {
@@ -240,8 +240,8 @@ async function detectPreset(folder) {
       .stat(
         path.resolve(
           folder,
-          "functions/fn.func/.svelte-kit/output/server/index.js"
-        )
+          "functions/fn.func/.svelte-kit/output/server/index.js",
+        ),
       )
       .catch(() => false)
   ) {
@@ -288,14 +288,14 @@ function patchSveltKitServer(source, browsers) {
   code = replaceOrFail(
     code,
     "const init_app = `",
-    "head = '<script src=\"/tvkit-polyfills.js\"></script>\\n' + head;\n\t\tconst init_app = `"
+    "head = '<script src=\"/tvkit-polyfills.js\"></script>\\n' + head;\n\t\tconst init_app = `",
   );
   if (!isSupported("es6-module", browsers)) {
     // Remove modulepreloads
     code = replaceOrFail(
       code,
       "for (const path of included_modulepreloads) {",
-      "for (const path of []) {"
+      "for (const path of []) {",
     );
     // Use System.import instead of esm
     code = replaceOrFail(code, /\timport\(/gm, "\tSystem.import(");
@@ -312,7 +312,7 @@ function replaceOrFail(code, search, replacement) {
   const result = code.replace(search, replacement);
   if (result === code) {
     throw new Error(
-      `Failed to patch server code, could not find:\n\n${search}\n`
+      `Failed to patch server code, could not find:\n\n${search}\n`,
     );
   }
   return result;

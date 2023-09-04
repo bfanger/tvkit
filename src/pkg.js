@@ -6,8 +6,8 @@ export default JSON.parse(
   fs.readFileSync(
     path.resolve(
       path.dirname(fileURLToPath(import.meta.url)),
-      "../package.json"
+      "../package.json",
     ),
-    "utf8"
-  )
+    "utf8",
+  ),
 );

@@ -34,7 +34,7 @@ export default async function serve(
   browser,
   supports,
   ssl,
-  { css, minify }
+  { css, minify },
 ) {
   const browsers = getBrowsers(browser);
   setOverrides(supports);
@@ -93,7 +93,7 @@ export default async function serve(
         }
         if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
           return tryCache(responseBuffer.toString("utf8"), (content) =>
-            transformHtml(content, { browsers, root: "/", css })
+            transformHtml(content, { browsers, root: "/", css }),
           );
         }
         if (
@@ -105,18 +105,18 @@ export default async function serve(
               if (
                 isSupported(
                   ["custom-elements", "shadowdom", "css-variables"],
-                  browsers
+                  browsers,
                 ) === false
               ) {
                 code = code
                   .replace(
                     "class ErrorOverlay extends HTMLElement",
-                    "class ErrorOverlay"
+                    "class ErrorOverlay",
                   )
                   .replace("super();", "")
                   .replace(
                     "document.body.appendChild(new ErrorOverlay(err))",
-                    "console.error(err.message + '\\n' + err.stack)"
+                    "console.error(err.message + '\\n' + err.stack)",
                   );
               }
               if (css) {
@@ -145,7 +145,7 @@ export default async function serve(
     });
   }
 
-  function updateStyleSync(id, content) {`
+  function updateStyleSync(id, content) {`,
                 );
               }
             }
@@ -154,7 +154,7 @@ export default async function serve(
           });
         }
         return responseBuffer;
-      }
+      },
     ),
   });
 
@@ -181,7 +181,7 @@ export default async function serve(
   app.post("/tvkit-postcss", (req, res) => {
     raw(req, res, async () => {
       const body = await tryCache(req.body.toString("utf8"), (code) =>
-        transformCss(code, { browsers, filename: "tvkit-postcss.css" })
+        transformCss(code, { browsers, filename: "tvkit-postcss.css" }),
       );
       res.send(body);
     });
@@ -200,7 +200,7 @@ export default async function serve(
       babelRuntime(req.url.substring(20, req.url.length - 3), {
         browsers,
         minify,
-      })
+      }),
     );
     if (code === req.url) {
       res.status(500).end();
@@ -218,7 +218,7 @@ export default async function serve(
     : http.createServer(app);
   server.listen(port, "0.0.0.0", () => {
     console.info(
-      `[tvkit] Running on ${ssl ? "https" : "http"}://localhost:${port}/`
+      `[tvkit] Running on ${ssl ? "https" : "http"}://localhost:${port}/`,
     );
   });
 }
@@ -258,6 +258,6 @@ function decodeEtag(etag, hash) {
   }
   return Buffer.from(
     etag.substring(hash.length + prefix.length + 1, etag.length - 1),
-    "base64"
+    "base64",
   ).toString("ascii");
 }

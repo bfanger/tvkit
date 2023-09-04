@@ -11,7 +11,7 @@ import isSupported from "./isSupported.js";
 export default async function transformHtml(source, { browsers, root, css }) {
   const esm = isSupported(
     ["es6-module", "es6-module-dynamic-import"],
-    browsers
+    browsers,
   );
 
   const ast = parse(source);
@@ -45,14 +45,14 @@ export default async function transformHtml(source, { browsers, root, css }) {
         }
         node.set_content(code);
       }
-    })
+    }),
   );
 
   const script = ast.querySelector("script");
   if (script) {
     script.insertAdjacentHTML(
       "beforebegin",
-      `<script src="${root}tvkit-polyfills.js"></script>\n`
+      `<script src="${root}tvkit-polyfills.js"></script>\n`,
     );
   }
   if (css) {
@@ -62,7 +62,7 @@ export default async function transformHtml(source, { browsers, root, css }) {
           const code = await transformCss(node.textContent, { browsers });
           node.set_content(code);
         }
-      })
+      }),
     );
   }
   return ast.toString();

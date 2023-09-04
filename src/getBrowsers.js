@@ -74,7 +74,7 @@ export default function getBrowsers(target) {
       .map((query) => {
         if (query.compose !== "or" || query.type !== "browser_version") {
           throw new Error(
-            `complex TV queries not (yet) supported: ${JSON.stringify(query)}`
+            `complex TV queries not (yet) supported: ${JSON.stringify(query)}`,
           );
         }
         const browser = (query.browser ?? "").toLowerCase();
@@ -93,7 +93,7 @@ export default function getBrowsers(target) {
         }
         return `${query.browser} ${query.version}`;
       })
-      .join(", ")
+      .join(", "),
   );
 }
 

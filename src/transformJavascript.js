@@ -17,7 +17,7 @@ import isSupported from "./isSupported.js";
  */
 export default async function transformJavascript(
   source,
-  { browsers, root, filename, inline = false }
+  { browsers, root, filename, inline = false },
 ) {
   /** @type {string[]} */
   const externals = [];
@@ -31,12 +31,12 @@ export default async function transformJavascript(
     // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
     code = source.replace(
       ".insertRule(`@keyframes ${name} ${rule}`",
-      ".insertRule(`@-webkit-keyframes ${name} ${rule}`"
+      ".insertRule(`@-webkit-keyframes ${name} ${rule}`",
     );
   }
   const esm = isSupported(
     ["es6-module", "es6-module-dynamic-import"],
-    browsers
+    browsers,
   );
   let modules = esm ? false : "systemjs";
   if (inline) {
@@ -67,7 +67,7 @@ export default async function transformJavascript(
     console.warn(
       `babel.transformAsync unsuccessful${
         filename ? ` for ${filename}` : ""
-      }, no error, no code`
+      }, no error, no code`,
     );
     return { code, externals };
   }
@@ -97,7 +97,7 @@ export default async function transformJavascript(
         ms.overwrite(
           node.source.start + 1,
           node.source.start + 16,
-          `${root}tvkit-babel-runtime/`
+          `${root}tvkit-babel-runtime/`,
         ).appendLeft(node.source.end - 1, ".js");
       } else if (
         node.type === "ExpressionStatement" &&
@@ -119,7 +119,7 @@ export default async function transformJavascript(
               ms.overwrite(
                 file.start + 1,
                 file.start + 16,
-                `${root}tvkit-babel-runtime/`
+                `${root}tvkit-babel-runtime/`,
               ).appendLeft(file.end - 1, ".js");
             }
           }

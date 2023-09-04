@@ -72,9 +72,9 @@ Yargs(hideBin(process.argv))
         {
           css: argv.css,
           minify: argv.minify,
-        }
+        },
       );
-    }
+    },
   )
   .command(
     "build [folder]",
@@ -123,7 +123,7 @@ Yargs(hideBin(process.argv))
     (argv) => {
       if (argv.out === "") {
         throw new Error(
-          "No output folder specified, check the `--out` is using double dash and followed by a value"
+          "No output folder specified, check the `--out` is using double dash and followed by a value",
         );
       }
       build(
@@ -136,9 +136,9 @@ Yargs(hideBin(process.argv))
           css: argv.css,
           minify: argv.minify,
           force: argv.force,
-        }
+        },
       );
-    }
+    },
   )
 
   .demandCommand()
