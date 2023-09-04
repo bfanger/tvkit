@@ -19,10 +19,20 @@ export default async function transformJavascript(
   source,
   { browsers, root, filename, inline = false },
 ) {
+  const esm = isSupported(
+    ["es6-module", "es6-module-dynamic-import"],
+    browsers,
+  );
   /** @type {string[]} */
   const externals = [];
   let code = source;
   if (code.trim() === "") {
+    if (!esm) {
+      // SystemJS equivalent of an empty module
+      code = `System.register([], function() {
+  return { execute: function () {} };
+})`;
+    }
     return { code, externals };
   }
   if (!isSupported("css-keyframes", browsers)) {
@@ -34,10 +44,6 @@ export default async function transformJavascript(
       ".insertRule(`@-webkit-keyframes ${name} ${rule}`",
     );
   }
-  const esm = isSupported(
-    ["es6-module", "es6-module-dynamic-import"],
-    browsers,
-  );
   let modules = esm ? false : "systemjs";
   if (inline) {
     modules = false;
