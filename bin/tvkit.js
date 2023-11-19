@@ -78,7 +78,7 @@ Yargs(hideBin(process.argv))
   )
   .command(
     "build [folder]",
-    "Copy and transform files (experimental)",
+    "Copy and transform files",
     (yargs) => {
       yargs.positional("[folder]", {
         type: "string",
