@@ -1,6 +1,6 @@
 {
   "name": "tvkit",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Proxy to run a modern dev server in old browsers",
   "license": "MIT",
   "repository": {

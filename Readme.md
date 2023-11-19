@@ -26,7 +26,7 @@ TVKit intercepts requests to the other webserver and makes them work in old brow
 | --no-minify | false                 | Disable minificaton for the polyfills                                       |
 | --help      |                       | Show message per command. Ex: `tvkit serve --help`                          |
 
-tvkit adds browser aliases for SmartTV platforms:
+TVKit adds browser aliases for SmartTV platforms:
 Example `--browser "Tizen 5"` is aliased to `Chrome 63`
 
 ### Start tvkit & servers at the same time
@@ -43,9 +43,9 @@ Use [concurrently](https://github.com/open-cli-tools/concurrently) to start both
 
 ## Usage (build)
 
-Copy and transform html, js & css files from a directory
+Copy folder contents and transform all html, js & css files into new directory.
 
-Build your project for modern browsers (example: vite build), and use the `tvkit build` to make the generated output compatible for older browsers.
+Build your project for modern browsers (example: vite build) and then use the `tvkit build` to convert the generated folder into something that is compatible for older browsers.
 
 ```sh
 npx tvkit@latest build path/to/build --out path/to/output --browser "chrome 50"
@@ -63,12 +63,13 @@ npx tvkit@latest build path/to/build --out path/to/output --browser "chrome 50"
 | --remove    |               | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
 | --no-css    | false         | Disable CSS transpilation                                                   |
 | --no-minify | false         | Disable minificaton                                                         |
+| --quiet     | false         | Only log errors                                                             |
 | --help      |               | Show message per command. Ex: `tvkit build --help`                          |
 
 Note: Polyfilling will degrade the performance for platforms that could've run the modern javascript version.
 An alternative to `tvkit build` is using [@vitejs/plugin-legacy](https://www.npmjs.com/package/@vitejs/plugin-legacy) which has better performance on modern browsers, but doesn't work for some project setups (like SvelteKit projects).
 
-tvkit supports static builds from any framework and has special support for SvelteKit's node-adapter & vercel-adapter builds.
+TVKit supports static builds from any framework and has special support for SvelteKit's node-adapter & vercel-adapter builds.
 
 ## Technology
 
@@ -76,6 +77,6 @@ tvkit supports static builds from any framework and has special support for Svel
 - [Babel](https://babel.dev/) to transpile javascript on the fly.
 - [core-js](https://github.com/zloirock/core-js), [whatwg-fetch](https://github.com/whatwg/fetch) and others to polyfill missing features.
 - [PostCSS](https://postcss.org/) to transpile CSS on the fly using postcss-preset-env.
-- And others: [Rollup](https://rollupjs.org/), [Acorn](https://github.com/acornjs/acorn), [Yargs](http://yargs.js.org/)
+- And others: [Rollup](https://rollupjs.org/), [Acorn](https://github.com/acornjs/acorn), [Terser](https://terser.org/), [Yargs](http://yargs.js.org/)
 
 Consider funding these projects as they do a lot of the heavy lifting.

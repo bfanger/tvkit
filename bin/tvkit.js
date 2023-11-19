@@ -119,6 +119,11 @@ Yargs(hideBin(process.argv))
         type: "string",
         describe: "Override features (skips polyfills)",
       });
+      yargs.option("quiet", {
+        type: "boolean",
+        default: false,
+        describe: "Only show error output",
+      });
     },
     (argv) => {
       if (argv.out === "") {
@@ -136,6 +141,7 @@ Yargs(hideBin(process.argv))
           css: argv.css,
           minify: argv.minify,
           force: argv.force,
+          quiet: argv.quiet,
         },
       );
     },

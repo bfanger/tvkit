@@ -17,17 +17,18 @@ import isSupported, { setOverrides } from "./isSupported.js";
  * @param {string} out The output folder
  * @param {string} browser browserslist compatible browser
  * @param {Record<string, boolean>} supports Override features
- * @param {{css: boolean, minify:boolean, force:boolean}} flags
+ * @param {{css: boolean, minify:boolean, force:boolean, quiet:boolean}} flags
  * flags.css: Also transform css
  * flags.minify: Minify output
  * flags.force: Overwrite existing output folder
+ * flags.quiet: Hide all output thats isn't an error or warning
  */
 export default async function build(
   folder,
   out,
   browser,
   supports,
-  { css, minify, force },
+  { css, minify, force, quiet },
 ) {
   if (!force && (await fs.stat(out).catch(() => false))) {
     process.stderr.write(
@@ -35,11 +36,20 @@ export default async function build(
     );
     process.exit(1);
   }
+  /**
+   * @param  {any[]} args
+   */
+  function log(...args) {
+    if (quiet) {
+      return;
+    }
+    console.info(...args);
+  }
   const browsers = getBrowsers(browser);
   setOverrides(supports);
   const input = path.resolve(folder);
   const { publicFolder, justCopy, sveltekit } = await detectPreset(folder);
-  console.info("[tvkit]", {
+  log("[tvkit]", {
     input,
     output: path.resolve(out),
     sveltekit,
@@ -52,13 +62,14 @@ export default async function build(
   });
   const publicPath = path.join(out, publicFolder.substring(1));
 
-  const externals = await processFolder(folder, out, {
+  const { externals, errors, warnings } = await processFolder(folder, out, {
     base: path.resolve(folder),
     browsers,
     root: "",
     css,
     minify,
     justCopy,
+    log,
   });
   await generatePolyfills({ browsers, supports, minify }).then(async (code) => {
     await fs.writeFile(
@@ -66,9 +77,9 @@ export default async function build(
       code,
       "utf-8",
     );
-    console.info("✅", `${publicFolder}tvkit-polyfills.js`);
+    log("✅", `${publicFolder}tvkit-polyfills.js`);
   });
-  await fs.mkdir(path.resolve(publicPath, "tvkit-babel-runtime/helpers"), {
+  await fs.mkdir(path.resolve(publicPath, "tvkit-babel-runtime/helpers/esm"), {
     recursive: true,
   });
   await Promise.all(
@@ -81,7 +92,7 @@ export default async function build(
       await fs.writeFile(path.resolve(publicPath, outfile), code, {
         encoding: "utf-8",
       });
-      console.info("✅", `${publicFolder}${outfile}`);
+      log("✅", `${publicFolder}${outfile}`);
     }),
   );
   if (sveltekit) {
@@ -95,19 +106,31 @@ export default async function build(
       code,
       "utf-8",
     );
-    console.info("🩹", sveltekit);
+    log("🩹", sveltekit);
+  }
+  const hint = quiet ? "\n\n" : "\n\nUse --quiet for cleaner error output\n\n";
+  if (errors > 0) {
+    process.stderr.write(
+      `\n${errors} errors ${
+        warnings > 0 ? ` and ${warnings} warnings` : ""
+      }${hint}`,
+    );
+    process.exit(1);
+  }
+  if (warnings > 0) {
+    process.stderr.write(`\n${warnings} warnings${hint}`);
   }
 }
 
 /**
  * @param {string} folder
  * @param {string} out
- * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, justCopy: boolean | string[] }} options
+ * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, justCopy: boolean | string[], log(...args:any[]):void }} options
  */
 async function processFolder(
   folder,
   out,
-  { base, browsers, root, css, minify, justCopy },
+  { base, browsers, root, css, minify, justCopy, log },
 ) {
   if ((await fs.stat(out).catch(() => false)) === false) {
     await fs.mkdir(out, { recursive: true });
@@ -117,6 +140,8 @@ async function processFolder(
   const entries = await fs.readdir(folder);
   /** @type {Array<{path: string, out: string}>}  */
   const subfolders = [];
+  let warnings = 0;
+  let errors = 0;
   await Promise.all(
     entries.map(async (entry) => {
       const filename = path.resolve(folder, entry);
@@ -137,9 +162,10 @@ async function processFolder(
         ? justCopy.indexOf(filename) === -1
         : !justCopy;
       if (shouldProcess) {
-        if (entry.endsWith(".js")) {
-          await processFile(base, filename, outpath, async (source) => {
-            try {
+        let fileCopy = false;
+        try {
+          if (entry.endsWith(".js")) {
+            await processFile(base, filename, outpath, async (source) => {
               const { code, externals: nested } = await transformJavascript(
                 source,
                 {
@@ -152,51 +178,76 @@ async function processFolder(
               if (!minify) {
                 return code;
               }
-              const minified = await terser.minify(code, {
-                ecma: 5,
-                safari10: true,
-              });
-              return minified.code ?? code;
-            } catch (/** @type {any} */ err) {
-              process.stderr.write(
-                `❌ ${filename.substring(base.length)}\n\n${err?.message}`,
-              );
-              return process.exit(1);
-            }
-          });
-        } else if (entry.endsWith(".html") || entry.endsWith(".htm")) {
-          await processFile(base, filename, outpath, (source) =>
-            transformHtml(source, { browsers, root, css }),
+              try {
+                const minified = await terser.minify(code, {
+                  ecma: 5,
+                  safari10: true,
+                });
+                return minified.code ?? code;
+              } catch (/** @type {any} */ err) {
+                process.stderr.write(
+                  `⚠️ ${filename.substring(base.length)}\n\n${err?.message}\n`,
+                );
+                warnings += 1;
+                return code;
+              }
+            });
+            log("✅", filename.substring(base.length));
+          } else if (entry.endsWith(".html") || entry.endsWith(".htm")) {
+            await processFile(base, filename, outpath, (source) =>
+              transformHtml(source, { browsers, root, css }),
+            );
+          } else if (css && entry.endsWith(".css")) {
+            await processFile(base, filename, outpath, (source) =>
+              transformCss(source, { browsers, filename }),
+            );
+          } else {
+            fileCopy = true;
+            await copyFile(filename, outpath);
+            log("⏩", filename.substring(base.length));
+          }
+        } catch (/** @type {any} */ err) {
+          if (fileCopy) {
+            throw err;
+          }
+          errors += 1;
+          process.stderr.write(
+            `❌ ${filename.substring(base.length)}\n\n${err?.message}\n`,
           );
-        } else if (css && entry.endsWith(".css")) {
-          await processFile(base, filename, outpath, (source) =>
-            transformCss(source, { browsers, filename }),
-          );
-        } else {
-          await fs.copyFile(filename, outpath);
-          console.info("⏩", filename.substring(base.length));
+          await copyFile(filename, outpath);
         }
       } else {
-        await fs.copyFile(filename, outpath);
-        console.info("⏩", filename.substring(base.length));
+        await copyFile(filename, outpath);
       }
     }),
   );
-
+  /** @type {Array<{ externals:string[], errors: number, warnings: number }>} */
   const results = await Promise.all(
-    subfolders.map((subfolder) =>
-      processFolder(subfolder.path, subfolder.out, {
+    subfolders.map(async (subfolder) => {
+      const justCopySubfolder = justCopyFolder(subfolder.path, justCopy);
+      const result = await processFolder(subfolder.path, subfolder.out, {
         base,
         browsers,
         minify,
         root: `${root}../`,
         css,
-        justCopy: justCopyFolder(subfolder.path, justCopy),
-      }),
-    ),
+        justCopy: justCopySubfolder,
+        log,
+      });
+      if (justCopySubfolder === true) {
+        log("⏩", `${subfolder.path.substring(base.length)}`);
+      }
+      return result;
+    }),
   );
-  externals.push(...results.flat(1));
-  return externals;
+
+  externals.push(...results.map((result) => result.externals).flat(1));
+  return {
+    externals,
+    errors: errors + results.reduce((acc, result) => acc + result.errors, 0),
+    warnings:
+      warnings + results.reduce((acc, result) => acc + result.warnings, 0),
+  };
 }
 
 /**
@@ -209,7 +260,6 @@ async function processFile(base, input, output, transformer) {
   const source = await fs.readFile(input, "utf-8");
   const transformed = await transformer(source);
   await fs.writeFile(output, transformed);
-  console.info("✅", input.substring(base.length));
 }
 
 /** @param {string} folder */
@@ -231,6 +281,7 @@ async function detectPreset(folder) {
         path.resolve(folder, "env.js"),
         path.resolve(folder, "shims.js"),
         path.resolve(folder, "handler.js"),
+        path.resolve(folder, "node_modules"),
       ],
       sveltekit: "/server/index.js",
     };
@@ -316,4 +367,17 @@ function replaceOrFail(code, search, replacement) {
     );
   }
   return result;
+}
+
+/**
+ * Copy a file from source to target, unless the target is the same as the source.
+ *
+ * @param {string} source
+ * @param {string} target
+ */
+async function copyFile(source, target) {
+  if (source === target) {
+    return;
+  }
+  await fs.copyFile(source, target);
 }
