@@ -27,7 +27,11 @@ export default async function transformHtml(source, { browsers, root, css }) {
   }
   await Promise.all(
     ast.querySelectorAll("script").map(async (node) => {
-      if (node.hasAttribute("src") || node.textContent.length === 0) {
+      if (
+        node.hasAttribute("src") ||
+        node.textContent.length === 0 ||
+        node.getAttribute("data-tvkit") === "ignore"
+      ) {
         return;
       }
       const type = node.getAttribute("type");
@@ -48,17 +52,23 @@ export default async function transformHtml(source, { browsers, root, css }) {
     }),
   );
 
-  const script = ast.querySelector("script");
-  if (script) {
-    script.insertAdjacentHTML(
-      "beforebegin",
-      `<script src="${root}tvkit-polyfills.js"></script>\n`,
-    );
+  const scripts = ast.querySelectorAll("script");
+  for (const script of scripts) {
+    if (script.getAttribute("data-tvkit") !== "ignore") {
+      script.insertAdjacentHTML(
+        "beforebegin",
+        `<script src="${root}tvkit-polyfills.js"></script>\n`,
+      );
+      break;
+    }
   }
   if (css) {
     await Promise.all(
       ast.querySelectorAll("style").map(async (node) => {
-        if (node.textContent.length > 0) {
+        if (
+          node.textContent.length > 0 &&
+          node.getAttribute("data-tvkit") !== "ignore"
+        ) {
           const code = await transformCss(node.textContent, { browsers });
           node.set_content(code);
         }
