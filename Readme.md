@@ -1,9 +1,9 @@
 # TVKit
 
-A proxy server to use a modern dev server in old browsers.
+A proxy server which allows using modern dev servers in old browsers.
 "[Run SvelteKit on a TV](docs/sveltekit.md)"
 
-TVKit intercepts requests to the other webserver and makes them work in old browsers by injecting polyfills and tries to compile the modern javascript and CSS to code that is compatible with the older browser.
+TVKit intercepts requests to a webserver and converts the responses to make them work in old browsers. This works by injecting polyfills and transpiling the modern JavaScript and CSS to code that's compatible with older browsers.
 
 ## Usage (dev server)
 
@@ -58,7 +58,7 @@ npx tvkit@latest build path/to/build --out path/to/output --browser "chrome 50"
 | [folder]    |               | The folder containing modern javascript                                     |
 | --out       |               | The output folder                                                           |
 | --browser   |               | The transpilation target (uses browserslist)                                |
-| --force     | false         | Overrwrite files in output folder                                           |
+| --force     | false         | Overwrite files in output folder                                            |
 | --add       |               | Override feature. Ex `--add "es6-module"` forces adding systemjs polyfill   |
 | --remove    |               | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
 | --no-css    | false         | Disable CSS transpilation                                                   |

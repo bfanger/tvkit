@@ -91,13 +91,15 @@ export default async function serve(
         if (proxyRes.statusCode !== 200) {
           return responseBuffer;
         }
-        if (proxyRes.headers["content-type"]?.startsWith("text/html")) {
+        const contentType = proxyRes.headers["content-type"];
+        if (contentType?.startsWith("text/html")) {
           return tryCache(responseBuffer.toString("utf8"), (content) =>
             transformHtml(content, { browsers, root: "/", css }),
           );
         }
         if (
-          proxyRes.headers["content-type"]?.startsWith("application/javascript")
+          contentType?.startsWith("application/javascript") ||
+          contentType?.startsWith("text/javascript")
         ) {
           let code = responseBuffer.toString("utf8");
           return tryCache(code, async () => {

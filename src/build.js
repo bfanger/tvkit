@@ -351,6 +351,21 @@ function patchSveltKitServer(source, browsers) {
     // Use System.import instead of esm
     code = replaceOrFail(code, /\timport\(/gm, "\tSystem.import(");
   }
+  if (!isSupported("const", browsers)) {
+    code = replaceOrFail(code, /blocks\.push\("const /gm, 'blocks.push("var ');
+  }
+  if (!isSupported("arrow-functions", browsers)) {
+    code = replaceOrFail(
+      code,
+      /then\(\(\[kit, app\]\) =>/gm,
+      "then(function (params)",
+    );
+    code = replaceOrFail(
+      code,
+      /kit.start\(/gm,
+      "var kit = params[0]; var app = params[1]; kit.start(",
+    );
+  }
   return code;
 }
 
