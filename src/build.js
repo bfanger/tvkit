@@ -353,17 +353,34 @@ function patchSveltKitServer(source, browsers) {
   }
   if (!isSupported("const", browsers)) {
     code = replaceOrFail(code, /blocks\.push\("const /gm, 'blocks.push("var ');
+    code = replaceOrFail(code, /blocks\.push\(`const /gm, "blocks.push(`var ");
   }
   if (!isSupported("arrow-functions", browsers)) {
     code = replaceOrFail(
       code,
-      /then\(\(\[kit, app\]\) =>/gm,
-      "then(function (params)",
+      /then\(\(\[kit, app\]\) => {/gm,
+      "then(function (tvkitArgs) { var kit = tvkitArgs[0], app = tvkitArgs[1];",
     );
     code = replaceOrFail(
       code,
-      /kit.start\(/gm,
-      "var kit = params[0]; var app = params[1]; kit.start(",
+      '"data",\n        `form:',
+      '"data: data",\n        `form:',
+    );
+    code = replaceOrFail(
+      code,
+      `defer: (id) => new Promise((fulfil, reject) => {
+							deferred.set(id, { fulfil, reject });
+						})`,
+      `defer: function (id) { return new Promise((fulfil, reject) => {
+        			deferred.set(id, { fulfil: fulfil, reject: reject });
+            })}`,
+    );
+    code = replaceOrFail(
+      code,
+      `resolve: ({ id, data, error }) => {
+							const { fulfil, reject } = deferred.get(id);`,
+      `resolve: function (tvkitArgs) { var id = tvkitArgs.id, data = tvkitArgs.data, error = tvkitArgs.error;
+              var tvkitResult = deferred.get(id); var fulfil = tvkitResult.fulfil, reject = tvkitResult.reject;`,
     );
   }
   return code;
