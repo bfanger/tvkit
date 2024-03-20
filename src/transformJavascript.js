@@ -40,8 +40,8 @@ export default async function transformJavascript(
     // Fixes "SyntaxError: DOM Exception 12" on very old webkit versions
     // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
     code = source.replace(
-      ".insertRule(`@keyframes ${name} ${rule}`",
-      ".insertRule(`@-webkit-keyframes ${name} ${rule}`",
+      ".insertRule(`@keyframes ${",
+      ".insertRule(`@-webkit-keyframes ${",
     );
   }
   let modules = esm ? false : "systemjs";
@@ -77,7 +77,7 @@ export default async function transformJavascript(
     );
     return { code, externals };
   }
-  code = result?.code;
+  code = result.code;
   if (code.indexOf("@babel/runtime/") !== -1 || inline) {
     /** @type {any} */
     const ast = Parser.parse(code, {
