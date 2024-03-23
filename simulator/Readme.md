@@ -1,14 +1,11 @@
 # Simulator
 
-## Background
+We use a Docker image of Debian and install required dependencies for running the older Chrome Browser and a vnc server.
 
-We use docker image of Ubuntu 16 (Xenial) from 2017, which at the moment has a working package repository.
-We install chromium, this version is too new for our testing purposes, but it will install much of the required dependencies for running the older chrome.
+Based on info found on [WebOS App Debugging](https://webostv.developer.lge.com/develop/getting-started/app-debugging)
+we found downloads to old versions of Chrome.
 
-On [WebOS App Debugging](https://webostv.developer.lge.com/develop/getting-started/app-debugging)
-are links to old versions of chrome.
-
-Confusingly the version downloaded from v38 reports Chrome/43 as navigator.userAgent
+Confusingly the version downloaded from v38 reports Chrome/43 as navigator.userAgent 🤷
 
 ## Setup (Build the image)
 
