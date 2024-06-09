@@ -19,6 +19,7 @@
     "lint:tsc": "tsc --noEmit",
     "lint:eslint": "eslint --max-warnings=0 src",
     "format": "eslint --fix src && prettier --write src",
+    "test": "vitest run",
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky"
   },
@@ -40,7 +41,8 @@
     "husky": "^9.0.11",
     "prettier": "^3.3.1",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^7.12.0"
+    "typescript-eslint": "^7.12.0",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
     "@babel/core": "^7.24.7",
@@ -65,6 +67,7 @@
     "node-html-parser": "^6.1.13",
     "postcss": "^8.4.38",
     "postcss-preset-env": "^9.5.14",
+    "postcss-selector-parser": "^6.1.0",
     "proxy-polyfill": "^0.3.2",
     "regenerator-runtime": "^0.14.1",
     "rollup": "^4.18.0",

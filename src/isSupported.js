@@ -68,6 +68,15 @@ const supportMatrix = {
     samsung: 6.2,
     opera: 41,
   },
+  "css-selector-where": {
+    chrome: 88,
+    safari: 14,
+    firefox: 78,
+    edge: 88,
+    ie: Infinity,
+    samsung: 15,
+    opera: 8874,
+  },
   // Detect IE11
   ie11: {
     chrome: Infinity,
