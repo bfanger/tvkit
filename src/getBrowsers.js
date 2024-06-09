@@ -53,7 +53,6 @@ const aliases = {
  * @param {string} target
  */
 export default function getBrowsers(target) {
-  // eslint-disable-next-line no-param-reassign
   target = spacelessBrowser(target);
   /** @type {Array<import('browserslist').Query & {browser?: string, version?: string}>} */
   const parsed = browserslist.parse(target);

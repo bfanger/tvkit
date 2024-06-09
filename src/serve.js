@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 // @ts-check
 import fs from "fs/promises";
 import http from "http";
@@ -38,7 +39,7 @@ export default async function serve(
 ) {
   const browsers = getBrowsers(browser);
   setOverrides(supports);
-  // eslint-disable-next-line no-param-reassign
+
   minify = minify ?? true;
 
   console.info("[tvkit]", {
@@ -58,106 +59,107 @@ export default async function serve(
     target,
     ws: true,
     selfHandleResponse: true,
-    // changeOrigin: true,
     secure: false,
-    onProxyReq(proxyReq, req) {
-      // Strip previously injected headers
-      const etag = req.headers["if-none-match"];
-      if (etag) {
-        const originalEtag = decodeEtag(etag, slug);
-        if (originalEtag) {
-          proxyReq.setHeader("if-none-match", originalEtag);
-        } else {
-          proxyReq.removeHeader("if-none-match");
+    on: {
+      proxyReq(proxyReq, req) {
+        // Strip previously injected headers
+        const etag = req.headers["if-none-match"];
+        if (etag) {
+          const originalEtag = decodeEtag(etag, slug);
+          if (originalEtag) {
+            proxyReq.setHeader("if-none-match", originalEtag);
+          } else {
+            proxyReq.removeHeader("if-none-match");
+          }
         }
-      }
-      if (req.headers["if-modified-since"]) {
-        const previousDate = modifiedSince.get(req.url);
-        if (previousDate !== req.headers["if-modified-since"]) {
-          proxyReq.removeHeader("if-modified-since");
+        if (req.headers["if-modified-since"]) {
+          const previousDate = modifiedSince.get(req.url);
+          if (previousDate !== req.headers["if-modified-since"]) {
+            proxyReq.removeHeader("if-modified-since");
+          }
         }
-      }
-    },
-    onProxyRes: responseInterceptor(
-      async (responseBuffer, proxyRes, req, res) => {
-        // Include transform settings in cache headers
-        const etag = res.getHeader("etag");
-        if (typeof etag === "string") {
-          res.setHeader("etag", encodeEtag(etag, slug));
-        }
-        if (res.getHeader("last-modified")) {
-          modifiedSince.set(req.url, res.getHeader("last-modified"));
-        }
-        if (proxyRes.statusCode !== 200) {
-          return responseBuffer;
-        }
-        const contentType = proxyRes.headers["content-type"];
-        if (contentType?.startsWith("text/html")) {
-          return tryCache(responseBuffer.toString("utf8"), (content) =>
-            transformHtml(content, { browsers, root: "/", css }),
-          );
-        }
-        if (
-          contentType?.startsWith("application/javascript") ||
-          contentType?.startsWith("text/javascript")
-        ) {
-          let code = responseBuffer.toString("utf8");
-          return tryCache(code, async () => {
-            if (req.url === "/@vite/client") {
-              if (
-                isSupported(
-                  ["custom-elements", "shadowdom", "css-variables"],
-                  browsers,
-                ) === false
-              ) {
-                code = code
-                  .replace(
-                    "class ErrorOverlay extends HTMLElement",
-                    "class ErrorOverlay",
-                  )
-                  .replace("super();", "")
-                  .replace(
-                    "document.body.appendChild(new ErrorOverlay(err))",
-                    "console.error(err.message + '\\n' + err.stack)",
-                  );
-              }
-              if (css) {
-                // Add client side caching?, sessionStorage?
-                code = code.replace(
-                  "function updateStyle(id, content) {",
-                  `var updateStyleAsync = {};
-  function updateStyle(id, content) {
-    var current = {};
-    updateStyleSync(id, content); // fast update (without postcss applied)
-    updateStyleAsync[id] = current;
-    return fetch("/tvkit-postcss", {
-      method: "POST",
-      body: content,
-      headers: { "Content-Type": "text/css" },
-    }).then(function (response) {
-      if (!response.ok) {
-        return;
-      }
-      return response.text().then(function (css) {
-        if (updateStyleAsync[id] === current) {
-          removeStyle(id);
-          updateStyleSync(id, css);
-        }
-      });
-    });
-  }
-
-  function updateStyleSync(id, content) {`,
-                );
-              }
-            }
-            return (await transformJavascript(code, { browsers, root: "/" }))
-              .code;
-          });
-        }
-        return responseBuffer;
       },
-    ),
+      proxyRes: responseInterceptor(
+        async (responseBuffer, proxyRes, req, res) => {
+          // Include transform settings in cache headers
+          const etag = res.getHeader("etag");
+          if (typeof etag === "string") {
+            res.setHeader("etag", encodeEtag(etag, slug));
+          }
+          if (res.getHeader("last-modified")) {
+            modifiedSince.set(req.url, res.getHeader("last-modified"));
+          }
+          if (proxyRes.statusCode !== 200) {
+            return responseBuffer;
+          }
+          const contentType = proxyRes.headers["content-type"];
+          if (contentType?.startsWith("text/html")) {
+            return tryCache(responseBuffer.toString("utf8"), (content) =>
+              transformHtml(content, { browsers, root: "/", css }),
+            );
+          }
+          if (
+            contentType?.startsWith("application/javascript") ||
+            contentType?.startsWith("text/javascript")
+          ) {
+            let code = responseBuffer.toString("utf8");
+            return tryCache(code, async () => {
+              if (req.url === "/@vite/client") {
+                if (
+                  isSupported(
+                    ["custom-elements", "shadowdom", "css-variables"],
+                    browsers,
+                  ) === false
+                ) {
+                  code = code
+                    .replace(
+                      "class ErrorOverlay extends HTMLElement",
+                      "class ErrorOverlay",
+                    )
+                    .replace("super();", "")
+                    .replace(
+                      "document.body.appendChild(new ErrorOverlay(err))",
+                      "console.error(err.message + '\\n' + err.stack)",
+                    );
+                }
+                if (css) {
+                  // Add client side caching?, sessionStorage?
+                  code = code.replace(
+                    "function updateStyle(id, content) {",
+                    `var updateStyleAsync = {};
+    function updateStyle(id, content) {
+      var current = {};
+      updateStyleSync(id, content); // fast update (without postcss applied)
+      updateStyleAsync[id] = current;
+      return fetch("/tvkit-postcss", {
+        method: "POST",
+        body: content,
+        headers: { "Content-Type": "text/css" },
+      }).then(function (response) {
+        if (!response.ok) {
+          return;
+        }
+        return response.text().then(function (css) {
+          if (updateStyleAsync[id] === current) {
+            removeStyle(id);
+            updateStyleSync(id, css);
+          }
+        });
+      });
+    }
+
+    function updateStyleSync(id, content) {`,
+                  );
+                }
+              }
+              return (await transformJavascript(code, { browsers, root: "/" }))
+                .code;
+            });
+          }
+          return responseBuffer;
+        },
+      ),
+    },
   });
 
   const app = express();

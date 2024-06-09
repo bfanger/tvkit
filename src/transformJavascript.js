@@ -1,5 +1,5 @@
 // @ts-check
-/* eslint-disable no-template-curly-in-string */
+
 import path from "path";
 import { fileURLToPath } from "url";
 import { transformAsync } from "@babel/core";

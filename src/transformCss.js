@@ -1,6 +1,7 @@
 // @ts-check
-import postcssPresetEnv from "postcss-preset-env";
 import postcss from "postcss";
+// @ts-ignore
+import postcssPresetEnv from "postcss-preset-env";
 
 /** @type {Record<string,import('postcss').Processor>} */
 const processors = {};

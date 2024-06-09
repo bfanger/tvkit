@@ -165,7 +165,7 @@ function getCoreJSModules(targets, supports) {
       } else {
         forced.push(feature);
       }
-      // eslint-disable-next-line no-continue
+
       continue;
     }
     if (feature.startsWith("esnext.")) {
@@ -174,6 +174,7 @@ function getCoreJSModules(targets, supports) {
       exclude.push(feature); // Exclude features that are not supported by any browser.
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return [
     ...forced,
     ...compat({

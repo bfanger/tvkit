@@ -8,8 +8,8 @@
     "module": "es2022",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "paths": {},
+    "paths": {}
   },
-  "include": ["bin/*", "src/**/*", "types/**/*"],
-  "exclude": [],
+  "include": ["bin/*", "src/**/*", "types/**/*", "*.config.js"],
+  "exclude": []
 }
