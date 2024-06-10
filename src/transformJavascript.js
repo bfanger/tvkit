@@ -39,12 +39,29 @@ export default async function transformJavascript(
     // Patch Svelte to use -webkit-keyframes
     // Fixes "SyntaxError: DOM Exception 12" on very old webkit versions
     // Note: This breaks the animation when the browser doesn't support `@-webkit-keyframes`
-    code = source.replace(
+    code = code.replace(
       ".insertRule(`@keyframes ${",
       ".insertRule(`@-webkit-keyframes ${",
     );
   }
   let modules = esm ? false : "systemjs";
+  if (modules) {
+    // Patch Svelte5 (Object.defineProperty throws on native code functions)
+    // Fixes "TypeError: Cannot redefine property: name"
+    code = code.replace(
+      "var define_property = Object.defineProperty;",
+      `function define_property(obj, prop, config) {
+  try {
+    return Object.defineProperty(obj, prop, config);
+  } catch (err) {
+    if (config.value === "{expression}") {
+      return obj;
+    }
+    throw err;
+  }
+}`,
+    );
+  }
   if (inline) {
     modules = false;
   }

@@ -24,7 +24,12 @@ export default async function generatePolyfills({
   const file = path.join(folder, `polyfills${minify ? ".min" : ""}.js`);
   const fileInfo = await fs.stat(file).catch(() => ({ mtime: 0 }));
   const pkgInfo = await fs.stat(require.resolve("../package.json"));
-  if (fileInfo.mtime && pkgInfo.mtime < fileInfo.mtime) {
+  const generateInfo = await fs.stat(require.resolve("./generatePolyfills.js"));
+  if (
+    fileInfo.mtime &&
+    pkgInfo.mtime < fileInfo.mtime &&
+    generateInfo.mtime < fileInfo.mtime
+  ) {
     return fs.readFile(file, "utf8");
   }
 
@@ -49,6 +54,7 @@ export default async function generatePolyfills({
     imports.push("custom-event-polyfill");
   }
   if (!isSupported("dom-append", browsers)) {
+    imports.push("node-before-polyfill");
     imports.push([
       "appendPolyfill",
       "cross-browser-polyfill/src/polyfills/element-append",
@@ -63,7 +69,7 @@ removePolyfill();
     `;
   }
   if (!isSupported("normalize", browsers)) {
-    imports.push("unorm"); // @todo: Use a smaller non-spec-compliant polyll?
+    imports.push("unorm"); // @todo: Use a smaller non-spec-compliant polyfill?
   }
 
   if (!isSupported("composedPath", browsers)) {

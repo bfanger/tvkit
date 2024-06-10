@@ -4,9 +4,21 @@ Svelte 5 is using javascript & css patterns that are not easily transpiled into 
 
 I've documented my findings/work-in-progress here:
 
-## CSS not working
+## HotReload doesn't remove outdated component
+
+Workaround: In **svelte.config.js** add:
+
+```js
+compilerOptions: {
+  hmr: false;
+}
+```
+
+## CSS caveats
 
 Svelte 5 is using the [:where() selector](https://caniuse.com/mdn-css_selectors_where) for lower specificity which is only supported in modern browsers.
+
+TVKit removes the :where from CSS selector, resulting in css with different specificity.
 
 ## $document.title undefined
 
@@ -32,10 +44,9 @@ export function init_operations() {
   }
 ```
 
-## Can't redefine name
+## TypeError: Cannot redefine property: name
 
-In **src/internal/client/reactivity/effects.js** comment the lines with statements like:
+Trying to call Object.defineProperty on native functions throws an exception in older Chrome.
 
-```ts
-define_property(fn, "name", {
-```
+TVKit patches the `define_property` function from **src/internal/client/utils.js**
+Maybe we should also remove the call from `template_effect`

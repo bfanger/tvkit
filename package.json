@@ -1,6 +1,6 @@
 {
   "name": "tvkit",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "description": "Proxy to run a modern dev server in old browsers",
   "license": "MIT",
   "repository": {
@@ -54,7 +54,7 @@
     "acorn": "^8.11.3",
     "acorn-walk": "^8.3.2",
     "browserslist": "^4.23.1",
-    "caniuse-lite": "^1.0.30001629",
+    "caniuse-lite": "^1.0.30001632",
     "core-js": "^3.37.1",
     "core-js-compat": "^3.37.1",
     "cross-browser-polyfill": "^1.0.5",
@@ -64,6 +64,7 @@
     "http-proxy-middleware": "^3.0.0",
     "intersection-observer": "^0.12.2",
     "magic-string": "^0.30.10",
+    "node-before-polyfill": "^1.0.0",
     "node-html-parser": "^6.1.13",
     "postcss": "^8.4.38",
     "postcss-preset-env": "^9.5.14",
