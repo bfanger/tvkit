@@ -44,24 +44,28 @@ export default async function transformJavascript(
       ".insertRule(`@-webkit-keyframes ${",
     );
   }
-  let modules = esm ? false : "systemjs";
-  if (modules) {
-    // Patch Svelte5 (Object.defineProperty throws on native code functions)
-    // Fixes "TypeError: Cannot redefine property: name"
+  if (!esm) {
+    // Patch Svelte5 (Changing the value of an exported value doesn't work in SystemJS)
+    // Fixes "TypeError: undefined is not a function" at append
     code = code.replace(
-      "var define_property = Object.defineProperty;",
-      `function define_property(obj, prop, config) {
-  try {
-    return Object.defineProperty(obj, prop, config);
-  } catch (err) {
-    if (config.value === "{expression}") {
-      return obj;
-    }
-    throw err;
+      `var $window;
+var $document;
+function init_operations() {
+  if ($window !== void 0) {
+    return;
+  }`,
+      `var $window = typeof window === "object" ? window : undefined;
+var $document = typeof document === "object" ? document : undefined;
+var tvkitWindow
+function init_operations() {
+  if (tvkitWindow !== void 0) {
+    return;
   }
-}`,
+  tvkitWindow = window;`,
     );
   }
+
+  let modules = esm ? false : "systemjs";
   if (inline) {
     modules = false;
   }

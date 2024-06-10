@@ -78,7 +78,7 @@ if (!Event.prototype.composedPath) {
   Event.prototype.composedPath = function composedPathPolyfill() {
     var target = this.target;
     if (this.path) {
-      return this.path;
+      return Array.prototype.slice.call(this.path);
     }
     this.path = [];
     while (target.parentNode !== null) {
@@ -123,6 +123,33 @@ if (typeof new Error().stack !== "string") {
       systemJs.indexOf("*/") + 2,
       systemJs.indexOf("# sourceMappingURL="),
     );
+  }
+  if (!isSupported("es6-module", browsers)) {
+    // Patch Object.defineProperty for Svelte 5 (Object.defineProperty throws on native code functions in older browsers)
+    // Fixes "TypeError: Cannot redefine property: name"
+    code += `
+(function () {
+  var define_property = Object.defineProperty;
+  Object.defineProperty = function (obj, prop, config) {
+    try {
+      return define_property(obj, prop, config);
+    } catch (err) {
+      if (!(prop === "name" && typeof config.value === "string")) {	
+        console.warn(err);
+      }
+      return obj;
+    }
+  };
+}());
+`;
+    // Svelte 5 $inspect uses unbound call to console.log.
+    // Fixes "Uncaught TypeError: Illegal invocation"
+    code += `
+(function () {
+  var log = console.log;
+  console.log = log.bind(console); 
+}());
+`;
   }
 
   // Bundle the polyfills
