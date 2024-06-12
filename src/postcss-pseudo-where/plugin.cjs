@@ -1,43 +1,27 @@
-// @ts-nocheck
-
 /**
  * Removes :where from the selector so its matches, but it the specificity is different than it should be.
- *
- * Based on https://github.com/IlyaUpyackovich/postcss-pseudo-is
  */
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const parser = require("postcss-selector-parser");
 
+/**
+ * @param {parser.Root} rule
+ */
 function transform(rule) {
   rule.each((selector) => {
-    let lastSelectorsList = new Set([selector]);
-    let detectedPseudoWhere = false;
+    let replacements = new Map();
 
     selector.walkPseudos((pseudo) => {
       if (pseudo.value !== ":where") return;
 
-      detectedPseudoWhere = true;
-      let newSelectorsList = new Set();
-      let index = selector.index(pseudo);
-
-      lastSelectorsList.forEach((lastSelector) => {
-        pseudo.each((innerSelector) => {
-          let selectorClone = lastSelector.clone();
-          selectorClone.at(index).replaceWith(innerSelector);
-          newSelectorsList.add(selectorClone);
-        });
-      });
-
-      lastSelectorsList = newSelectorsList;
+      replacements.set(pseudo, pseudo.nodes);
     });
 
-    if (detectedPseudoWhere) {
-      lastSelectorsList.forEach((lastSelector) => {
-        selector.parent.insertBefore(selector, lastSelector);
+    if (replacements.size > 0) {
+      replacements.forEach((nodes, pseudo) => {
+        pseudo.replaceWith(nodes);
       });
-
-      selector.remove();
     }
   });
 }
@@ -45,19 +29,21 @@ function transform(rule) {
 let processor = parser(transform);
 
 module.exports = () => {
-  return {
+  /** @type  {import('postcss').AcceptedPlugin} */
+  const plugin = {
     postcssPlugin: "postcss-pseudo-where",
+
     Rule(rule) {
-      if (!rule.selector || !rule.selector.indexOf(":where") === -1) {
+      if (!rule.selector || rule.selector.indexOf(":where") === -1) {
         return;
       }
-
       processor.processSync(rule, {
         lossless: false,
         updateSelector: true,
       });
     },
   };
+  return plugin;
 };
 
 module.exports.postcss = true;

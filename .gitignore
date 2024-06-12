@@ -7,4 +7,5 @@ node_modules
 /functions
 /storybook-static
 /test-results
+/user
 .env

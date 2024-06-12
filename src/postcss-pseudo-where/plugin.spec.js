@@ -15,10 +15,16 @@ async function run(input, output) {
 }
 
 describe("postcss-pseudo-where", () => {
-  it("remove :where from selector", async () => {
+  it("should remove :where() from selector", async () => {
     await run(
       "footer.svelte-hash a:where(.svelte-hash) {}",
       "footer.svelte-hash a.svelte-hash {}",
+    );
+  });
+  it("should remove multiple :where() from selector", async () => {
+    await run(
+      '.prose :where(p):not(:where([class~="not-prose"],[class~="not-prose"] *)) {}',
+      '.prose p:not([class~="not-prose"],[class~="not-prose"] *) {}',
     );
   });
 });
