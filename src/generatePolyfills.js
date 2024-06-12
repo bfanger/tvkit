@@ -165,7 +165,17 @@ if (typeof new Error().stack !== "string") {
     code += `
 (function () {
   var log = console.log;
-  console.log = log.bind(console); 
+  var info = console.info;
+  var warn = console.warn;
+  var error = console.error;
+  try {
+    log('');
+  } catch (err) {
+    console.log = log.bind(console); 
+    console.info = info.bind(console); 
+    console.warn = warn.bind(console); 
+    console.error = error.bind(console); 
+  }
 }());
 `;
   }

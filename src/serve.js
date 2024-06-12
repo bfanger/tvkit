@@ -160,8 +160,23 @@ export default async function serve(
                   );
                 }
               }
-              return (await transformJavascript(code, { browsers, root: "/" }))
-                .code;
+              const now = Date.now();
+              if (code.length > 512 * 1024) {
+                process.stdout.write(
+                  `${req.url} ${(code.length / 1024).toLocaleString("en", { maximumFractionDigits: 0 })} kB\n`,
+                );
+              }
+              const transformed = await transformJavascript(code, {
+                browsers,
+                root: "/",
+              });
+              const elapsed = Date.now() - now;
+              if (elapsed > 5000) {
+                process.stdout.write(
+                  `${req.url} took ${Math.round(elapsed / 1000)}s\n`,
+                );
+              }
+              return transformed.code;
             });
           }
           return responseBuffer;
