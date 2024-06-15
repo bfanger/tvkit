@@ -71,6 +71,7 @@ if (typeof res.body === 'undefined') {
     imports.push("custom-event-polyfill");
   }
   if (!isSupported("dom-append", browsers)) {
+    imports.push("@ungap/is-connected");
     imports.push("node-before-polyfill");
     imports.push([
       "appendPolyfill",

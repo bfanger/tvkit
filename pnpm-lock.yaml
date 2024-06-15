@@ -26,6 +26,9 @@ importers:
       '@rollup/plugin-terser':
         specifier: ^0.4.4
         version: 0.4.4(rollup@4.18.0)
+      '@ungap/is-connected':
+        specifier: ^0.2.0
+        version: 0.2.0
       acorn:
         specifier: ^8.11.3
         version: 8.11.3
@@ -1420,6 +1423,9 @@ packages:
   '@typescript-eslint/visitor-keys@7.12.0':
     resolution: {integrity: sha512-uZk7DevrQLL3vSnfFl5bj4sL75qC9D6EdjemIdbtkuUmIheWpuiiylSY01JxJE7+zGrOWDZrp1WxOuDntvKrHQ==}
     engines: {node: ^18.18.0 || >=20.0.0}
+
+  '@ungap/is-connected@0.2.0':
+    resolution: {integrity: sha512-VK0rsCIpkY3WFsvc2ncC0Xz6/BzFjUZiLncP6zmahl62fK8SnFeCPNeL+peFWA1J4cRJvvOuO5QI5wR2rJGK1g==}
 
   '@vitest/expect@1.6.0':
     resolution: {integrity: sha512-ixEvFVQjycy/oNgHjqsL6AZCDduC+tflRluaHIzKIsdbzkLn2U/iBnVeJwB6HsIjQBdfMR8Z0tRxKUsvFJEeWQ==}
@@ -4413,6 +4419,8 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 7.12.0
       eslint-visitor-keys: 3.4.3
+
+  '@ungap/is-connected@0.2.0': {}
 
   '@vitest/expect@1.6.0':
     dependencies:

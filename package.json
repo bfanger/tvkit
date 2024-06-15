@@ -1,6 +1,6 @@
 {
   "name": "tvkit",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Proxy to run a modern dev server in old browsers",
   "license": "MIT",
   "repository": {
@@ -51,6 +51,7 @@
     "@babel/runtime": "^7.24.7",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-terser": "^0.4.4",
+    "@ungap/is-connected": "^0.2.0",
     "acorn": "^8.11.3",
     "acorn-walk": "^8.3.2",
     "browserslist": "^4.23.1",

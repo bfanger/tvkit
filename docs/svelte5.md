@@ -4,16 +4,6 @@ Svelte 5 is using javascript & css patterns that are not easily transpiled into 
 
 I've documented my findings/work-in-progress here:
 
-## HotReload doesn't remove outdated component
-
-Workaround: In **svelte.config.js** add:
-
-```js
-compilerOptions: {
-  hmr: false;
-}
-```
-
 ## CSS caveats
 
 Svelte 5 is using the [:where() selector](https://caniuse.com/mdn-css_selectors_where) for lower specificity which is only supported in modern browsers.
@@ -48,5 +38,4 @@ export function init_operations() {
 
 Trying to call Object.defineProperty on native functions throws an exception in older Chrome.
 
-TVKit patches the `define_property` function from **src/internal/client/utils.js**
-Maybe we should also remove the call from `template_effect`
+TVKit patches the `Object.defineProperty` function and ignores the error when trying to override the name.
