@@ -45,7 +45,8 @@ export default async function generatePolyfills({
     imports.push("intersection-observer");
   }
   if (!isSupported("proxy", browsers)) {
-    imports.push("proxy-polyfill/proxy.min.js");
+    imports.push(["ProxyPolyfill", "es6-proxy-polyfill"]);
+    code += `window.Proxy = window.Proxy || ProxyPolyfill;`;
   }
   if (!isSupported("textencoder", browsers)) {
     imports.push("fast-text-encoding");
