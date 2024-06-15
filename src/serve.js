@@ -59,6 +59,8 @@ export default async function serve(
     target,
     ws: true,
     selfHandleResponse: true,
+    // changeOrigin when target is a domain name
+    changeOrigin: !new URL(target).hostname.match("^(localhost|[0-9.]+)$"),
     secure: false,
     on: {
       proxyReq(proxyReq, req) {
