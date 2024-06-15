@@ -41,6 +41,22 @@ export default async function generatePolyfills({
   if (!isSupported("fetch", browsers)) {
     imports.push("whatwg-fetch");
   }
+  if (!isSupported("streams", browsers)) {
+    imports.push("web-streams-polyfill/polyfill/es5");
+    code += `const res = new Response();
+if (typeof res.body === 'undefined') {
+  Object.defineProperty(Response.prototype, 'body', { get: function getBody() {
+    var response = this;
+    return new ReadableStream({ start: function start(controller) {
+      response.text().then(function (text) {
+        controller.enqueue(new TextEncoder().encode(text));
+        controller.close();
+      });
+    }});
+  }});
+}
+`;
+  }
   if (!isSupported("intersectionobserver", browsers)) {
     imports.push("intersection-observer");
   }

@@ -98,6 +98,9 @@ importers:
       unorm:
         specifier: ^1.6.0
         version: 1.6.0
+      web-streams-polyfill:
+        specifier: ^4.0.0
+        version: 4.0.0
       whatwg-fetch:
         specifier: ^3.6.20
         version: 3.6.20
@@ -2943,6 +2946,10 @@ packages:
         optional: true
       jsdom:
         optional: true
+
+  web-streams-polyfill@4.0.0:
+    resolution: {integrity: sha512-0zJXHRAYEjM2tUfZ2DiSOHAa2aw1tisnnhU3ufD57R8iefL+DcdJyRBRyJpG+NUimDgbTI/lH+gAE1PAvV3Cgw==}
+    engines: {node: '>= 8'}
 
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
@@ -5994,6 +6001,8 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  web-streams-polyfill@4.0.0: {}
 
   whatwg-fetch@3.6.20: {}
 
