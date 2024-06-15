@@ -64,6 +64,32 @@ function init_operations() {
   tvkitWindow = window;`,
     );
   }
+  if (!isSupported("proxy", browsers)) {
+    // Patch Svelte5 proxy() function for the src\legacy\legacy-client.js
+    // Fixes SvelteKit navigation (reacting to root.$set() calls)
+    code = code.replace(
+      `}
+  return value;
+}
+function unwrap(value, already_unwrapped) {`,
+      `}
+  if (typeof value === "object" && value != null && value.stores) {
+    var tvkitProxy = {}
+    var tvkitSignals = {}
+    Object.keys(value).forEach(function (prop) {
+      tvkitSignals[prop] = source(value[prop]);
+      Object.defineProperty(tvkitProxy, prop, {
+        get: function () { return get(tvkitSignals[prop]) },
+        set: function (val) { set(tvkitSignals[prop], val) },
+      });
+    })
+    return tvkitProxy;
+  }
+  return value;
+}
+function unwrap(value, already_unwrapped) {`,
+    );
+  }
 
   let modules = esm ? false : "systemjs";
   if (inline) {
