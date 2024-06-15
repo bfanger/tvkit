@@ -100,6 +100,12 @@ export default async function serve(
               transformHtml(content, { browsers, root: "/", css }),
             );
           }
+          if (css && contentType?.startsWith("text/css")) {
+            let code = responseBuffer.toString("utf8");
+            return tryCache(code, async () => {
+              return transformCss(code, { browsers, filename: req.url });
+            });
+          }
           if (
             contentType?.startsWith("application/javascript") ||
             contentType?.startsWith("text/javascript")
