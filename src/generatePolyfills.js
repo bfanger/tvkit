@@ -40,6 +40,14 @@ export default async function generatePolyfills({
   }
   if (!isSupported("fetch", browsers)) {
     imports.push("whatwg-fetch");
+    // Fix: TypeError: Failed to construct 'Headers': No matching constructor signature.
+    code += `var UnpatchedHeaders = window.Headers;
+  window.Headers = function PatchedHeaders(init) {
+  if (typeof init === 'undefined') {
+    return new UnpatchedHeaders();
+  }
+  return new UnpatchedHeaders(init);
+};`;
   }
   if (!isSupported("streams", browsers)) {
     imports.push("web-streams-polyfill/polyfill/es5");
@@ -56,6 +64,9 @@ if (typeof res.body === 'undefined') {
   }});
 }
 `;
+  }
+  if (!isSupported("abortcontroller", browsers)) {
+    imports.push("abortcontroller-polyfill/dist/polyfill-patch-fetch");
   }
   if (!isSupported("intersectionobserver", browsers)) {
     imports.push("intersection-observer");

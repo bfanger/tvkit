@@ -4,9 +4,9 @@
     "checkJs": true,
     "noEmit": true,
     "strict": true,
-    "target": "es2021",
-    "module": "es2022",
-    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "paths": {}
   },
