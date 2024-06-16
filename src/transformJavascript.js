@@ -65,6 +65,9 @@ function init_operations() {
     );
   }
   if (!isSupported("proxy", browsers)) {
+    // Patch Svelte5 validate_prop_bindings() function for the src\internal\client\validate.js
+    // Fixes `A component is attempting to bind to a non-bindable property` errors
+    code = code.replace("if (!bindable.includes(key)) {", "if (false) {");
     // Patch Svelte5 proxy() function for the src\legacy\legacy-client.js
     // Fixes SvelteKit navigation (reacting to root.$set() calls)
     code = code.replace(
