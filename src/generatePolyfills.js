@@ -49,9 +49,9 @@ export default async function generatePolyfills({
   return new UnpatchedHeaders(init);
 };`;
   }
-  if (!isSupported("streams", browsers)) {
+  if (!isSupported("stream", browsers)) {
     imports.push("web-streams-polyfill/polyfill/es5");
-    code += `const res = new Response();
+    code += `var res = new Response();
 if (typeof res.body === 'undefined') {
   Object.defineProperty(Response.prototype, 'body', { get: function getBody() {
     var response = this;
@@ -95,7 +95,7 @@ if (typeof res.body === 'undefined') {
     code += `
 appendPolyfill();
 removePolyfill();
-    `;
+`;
   }
   if (!isSupported("normalize", browsers)) {
     imports.push("unorm"); // @todo: Use a smaller non-spec-compliant polyfill?

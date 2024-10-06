@@ -77,7 +77,7 @@ async function isFile(filename) {
   try {
     const info = await fs.stat(filename);
     return info.isFile();
-  } catch (err) {
+  } catch {
     return false;
   }
 }

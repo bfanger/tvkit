@@ -50,12 +50,16 @@ export default async function transformJavascript(
     code = code.replace(
       `var $window;
 var $document;
+var first_child_getter;
+var next_sibling_getter;
 function init_operations() {
   if ($window !== void 0) {
     return;
   }`,
       `var $window = typeof window === "object" ? window : undefined;
 var $document = typeof document === "object" ? document : undefined;
+var first_child_getter = function () { return this.firstChild; };
+var next_sibling_getter = function () { return this.nextSibling; };
 var tvkitWindow
 function init_operations() {
   if (tvkitWindow !== void 0) {
@@ -63,6 +67,15 @@ function init_operations() {
   }
   tvkitWindow = window;`,
     );
+    if (!isSupported("dom-append", browsers)) {
+      code = code.replace(
+        `
+  first_child_getter = get_descriptor(node_prototype, "firstChild").get;
+  next_sibling_getter = get_descriptor(node_prototype, "nextSibling").get;
+`,
+        ``,
+      );
+    }
   }
   if (!isSupported("proxy", browsers)) {
     // Patch Svelte5 validate_prop_bindings() function for the src\internal\client\validate.js
@@ -93,6 +106,15 @@ function unwrap(value, already_unwrapped) {`,
 function unwrap(value, already_unwrapped) {`,
     );
   }
+  // Patch Svelte5 init_array_prototype_warnings() to disable detecting these warnings.
+  // These Array.prototype modifications conflict with the polyfills and when applied
+  // would cause `TypeError: Can't call method on undefined` errors
+  code = code.replace(
+    `function init_array_prototype_warnings() {`,
+    `function init_array_prototype_warnings() {
+    Array.__svelte_cleanup = function () {};
+    return;`,
+  );
 
   let modules = esm ? false : "systemjs";
   if (inline) {

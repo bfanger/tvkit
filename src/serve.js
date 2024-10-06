@@ -48,6 +48,7 @@ export default async function serve(
     browsers,
     supports,
     css,
+    minify,
     ssl,
   });
 

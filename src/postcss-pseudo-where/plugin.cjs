@@ -2,7 +2,6 @@
  * Removes :where from the selector so its matches, but it the specificity is different than it should be.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const parser = require("postcss-selector-parser");
 
 /**

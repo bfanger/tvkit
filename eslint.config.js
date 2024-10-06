@@ -33,6 +33,13 @@ export default ts.config(
     },
   },
   {
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-var-requires": "off"
+    },
+  },
+  {
     ignores: ["dist", "build", "node_modules"],
   },
 );

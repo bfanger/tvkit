@@ -4,8 +4,7 @@ import { hideBin } from "yargs/helpers";
 import serve from "../src/serve.js";
 import build from "../src/build.js";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-Yargs(hideBin(process.argv))
+await Yargs(hideBin(process.argv))
   .scriptName("tvkit")
   .command(
     "serve [target]",
@@ -62,7 +61,7 @@ Yargs(hideBin(process.argv))
           key: argv.sslKey,
         };
       }
-      serve(
+      await serve(
         // @ts-ignore
         argv.port,
         argv.target,
@@ -125,13 +124,13 @@ Yargs(hideBin(process.argv))
         describe: "Only show error output",
       });
     },
-    (argv) => {
+    async (argv) => {
       if (argv.out === "") {
         throw new Error(
           "No output folder specified, check the `--out` is using double dash and followed by a value",
         );
       }
-      build(
+      await build(
         // @ts-ignore
         argv.folder,
         argv.out,

@@ -100,7 +100,7 @@ export default async function build(
       path.resolve(folder, sveltekit.substring(1)),
       "utf-8",
     );
-    code = patchSveltKitServer(code, browsers);
+    code = patchSvelteKitServer(code, browsers);
     await fs.writeFile(
       path.resolve(out, sveltekit.substring(1)),
       code,
@@ -125,7 +125,7 @@ export default async function build(
 /**
  * @param {string} folder
  * @param {string} out
- * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, justCopy: boolean | string[], log(...args:any[]):void }} options
+ * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, justCopy: boolean | string[], log: (...args:any[]) => void }} options
  */
 async function processFolder(
   folder,
@@ -333,7 +333,7 @@ function justCopyFolder(subfolder, justCopy) {
  * @param {string} source
  * @param {string[]} browsers
  * */
-function patchSveltKitServer(source, browsers) {
+function patchSvelteKitServer(source, browsers) {
   let code = source;
   // Inject polyfills
   code = replaceOrFail(
