@@ -215,7 +215,7 @@ export default async function serve(
     });
   });
 
-  app.get("/tvkit-babel-runtime/*", async (req, res) => {
+  app.get("/tvkit-babel-runtime{/*path}", async (req, res) => {
     const etag = encodeEtag("babel-runtime", slug);
     if (req.headers["if-none-match"] === etag) {
       res.status(304).end();
