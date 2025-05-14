@@ -1,6 +1,8 @@
 // @ts-check
 import fs from "fs/promises";
+import { existsSync, createReadStream, createWriteStream } from "fs";
 import path from "path";
+import zlib from "zlib";
 import * as terser from "terser";
 import getBrowsers from "./getBrowsers.js";
 import generatePolyfills from "./generatePolyfills.js";
@@ -145,7 +147,7 @@ async function processFolder(
   await Promise.all(
     entries.map(async (entry) => {
       const filename = path.resolve(folder, entry);
-      const outpath = path.resolve(out, entry);
+      const outputPath = path.resolve(out, entry);
       const info = await fs.stat(filename);
 
       if (info.isDirectory()) {
@@ -163,9 +165,21 @@ async function processFolder(
         : !justCopy;
       if (shouldProcess) {
         let fileCopy = false;
+        const extensions = ["js", "css", "html", "htm"];
         try {
-          if (entry.endsWith(".js")) {
-            await processFile(base, filename, outpath, async (source) => {
+          if (
+            extensions.find(
+              (extension) =>
+                entry.endsWith(`.${extension}.gz`) ||
+                entry.endsWith(`.${extension}.br`),
+            )
+          ) {
+            if (!existsSync(filename.substring(0, filename.length - 3))) {
+              // @todo Decompress, process and recompress
+              log("❌", filename.substring(base.length));
+            }
+          } else if (entry.endsWith(".js")) {
+            await processFile(base, filename, outputPath, async (source) => {
               const { code, externals: nested } = await transformJavascript(
                 source,
                 {
@@ -192,18 +206,32 @@ async function processFolder(
                 return code;
               }
             });
-            log("✅", filename.substring(base.length));
+            log(
+              "✅",
+              filename.substring(base.length),
+              await applyCompression(filename, outputPath),
+            );
           } else if (entry.endsWith(".html") || entry.endsWith(".htm")) {
-            await processFile(base, filename, outpath, (source) =>
+            await processFile(base, filename, outputPath, (source) =>
               transformHtml(source, { browsers, root, css }),
             );
+            log(
+              "✅",
+              filename.substring(base.length),
+              await applyCompression(filename, outputPath),
+            );
           } else if (css && entry.endsWith(".css")) {
-            await processFile(base, filename, outpath, (source) =>
+            await processFile(base, filename, outputPath, (source) =>
               transformCss(source, { browsers, filename }),
+            );
+            log(
+              "✅",
+              filename.substring(base.length),
+              await applyCompression(filename, outputPath),
             );
           } else {
             fileCopy = true;
-            await copyFile(filename, outpath);
+            await copyFile(filename, outputPath);
             log("⏩", filename.substring(base.length));
           }
         } catch (/** @type {any} */ err) {
@@ -214,10 +242,10 @@ async function processFolder(
           process.stderr.write(
             `❌ ${filename.substring(base.length)}\n\n${err?.message}\n`,
           );
-          await copyFile(filename, outpath);
+          await copyFile(filename, outputPath);
         }
       } else {
-        await copyFile(filename, outpath);
+        await copyFile(filename, outputPath);
       }
     }),
   );
@@ -338,8 +366,8 @@ function patchSvelteKitServer(source, browsers) {
   // Inject polyfills
   code = replaceOrFail(
     code,
-    "const init_app = `",
-    "head = '<script src=\"/tvkit-polyfills.js\"></script>\\n' + head;\n\t\tconst init_app = `",
+    'let head = "";',
+    "let head = '<script src=\"/tvkit-polyfills.js\"></script>\\n'",
   );
   if (!isSupported("es6-module", browsers)) {
     // Remove modulepreloads
@@ -412,4 +440,47 @@ async function copyFile(source, target) {
     return;
   }
   await fs.copyFile(source, target);
+}
+
+/**
+ * If the source file has sibling compressed files, compress the processed target file.
+ *
+ * @param {string} source
+ * @param {string} target
+ */
+async function applyCompression(source, target) {
+  let extensions = [];
+  if (existsSync(`${source}.gz`)) {
+    await compressFile(target, `${target}.gz`, "gz");
+    extensions.push(".gz");
+  }
+  if (existsSync(`${source}.br`)) {
+    await compressFile(target, `${target}.br`, "br");
+    extensions.push(".br");
+  }
+  if (extensions.length === 0) {
+    return "";
+  }
+  return `{${extensions.join(",")}}`;
+}
+
+/**
+ * Compress a file using gzip or brotli.
+ *
+ * @param {string} source
+ * @param {string} target
+ * @param {'gz'|'br'} compression
+ * @returns {Promise<void>}
+ */
+async function compressFile(source, target, compression) {
+  const sourceStream = createReadStream(source);
+  const targetStream = createWriteStream(target);
+  const transform =
+    compression === "gz" ? zlib.createGzip() : zlib.createBrotliCompress();
+  sourceStream.pipe(transform).pipe(targetStream);
+
+  return new Promise((resolve, reject) => {
+    targetStream.on("finish", resolve);
+    targetStream.on("error", reject);
+  });
 }
