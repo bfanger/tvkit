@@ -19,18 +19,19 @@ import isSupported, { setOverrides } from "./isSupported.js";
  * @param {string} out The output folder
  * @param {string} browser browserslist compatible browser
  * @param {Record<string, boolean>} supports Override features
- * @param {{css: boolean, minify:boolean, force:boolean, quiet:boolean}} flags
+ * @param {{css: boolean, minify:boolean, force:boolean, quiet:boolean, terserConfigPath:string|undefined}} flags
  * flags.css: Also transform css
  * flags.minify: Minify output
  * flags.force: Overwrite existing output folder
- * flags.quiet: Hide all output thats isn't an error or warning
+ * flags.quiet: Hide all output that isn't an error or warning
+ * flags.terserConfigPath: Path to a terser config file
  */
 export default async function build(
   folder,
   out,
   browser,
   supports,
-  { css, minify, force, quiet },
+  { css, minify, force, quiet, terserConfigPath },
 ) {
   if (!force && (await fs.stat(out).catch(() => false))) {
     process.stderr.write(
@@ -51,6 +52,31 @@ export default async function build(
   setOverrides(supports);
   const input = path.resolve(folder);
   const { publicFolder, justCopy, sveltekit } = await detectPreset(folder);
+
+  // Load terser configuration if provided
+  let terserConfig = { ecma: 5, safari10: true };
+  if (terserConfigPath) {
+    try {
+      const terserConfigContent = await fs.readFile(
+        path.resolve(terserConfigPath),
+        "utf-8",
+      );
+      const parsedConfig = JSON.parse(terserConfigContent);
+      // Merge with default configuration
+      terserConfig = { ...terserConfig, ...parsedConfig };
+
+      log("[tvkit]", {
+        message: `loaded config for terser from ${terserConfigPath}`,
+        terserConfig,
+      });
+    } catch (/** @type {any} */ error) {
+      process.stderr.write(
+        `\nError loading terser config from ${terserConfigPath}: ${error.message || String(error)}\n\n`,
+      );
+      process.exit(1);
+    }
+  }
+
   log("[tvkit]", {
     input,
     output: path.resolve(out),
@@ -70,6 +96,7 @@ export default async function build(
     root: "",
     css,
     minify,
+    terserConfig,
     justCopy,
     log,
   });
@@ -127,12 +154,12 @@ export default async function build(
 /**
  * @param {string} folder
  * @param {string} out
- * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, justCopy: boolean | string[], log: (...args:any[]) => void }} options
+ * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, terserConfig?: Object, justCopy: boolean | string[], log: (...args:any[]) => void }} options
  */
 async function processFolder(
   folder,
   out,
-  { base, browsers, root, css, minify, justCopy, log },
+  { base, browsers, root, css, minify, terserConfig, justCopy, log },
 ) {
   if ((await fs.stat(out).catch(() => false)) === false) {
     await fs.mkdir(out, { recursive: true });
@@ -193,10 +220,9 @@ async function processFolder(
                 return code;
               }
               try {
-                const minified = await terser.minify(code, {
-                  ecma: 5,
-                  safari10: true,
-                });
+                // Use custom terser config if provided
+                // @ts-ignore - we know this is compatible with terser options
+                const minified = await terser.minify(code, terserConfig);
                 return minified.code ?? code;
               } catch (/** @type {any} */ err) {
                 process.stderr.write(
@@ -257,6 +283,7 @@ async function processFolder(
         base,
         browsers,
         minify,
+        terserConfig,
         root: `${root}../`,
         css,
         justCopy: justCopySubfolder,

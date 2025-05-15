@@ -10,12 +10,19 @@ import isSupported from "./isSupported.js";
  * Generate a @babel/runtime helper as an importable modules.
  *
  * @param {string} module
- * @param {{browsers: string[], minify?:boolean}} options
+ * @param {{browsers: string[], minify?:boolean, terserConfig?: Object}} options
  */
-export default async function babelRuntime(module, { browsers, minify }) {
+export default async function babelRuntime(
+  module,
+  { browsers, minify, terserConfig },
+) {
   const plugins = [commonjs()];
+
   if (minify) {
-    plugins.push(terser({ ecma: 5, safari10: true }));
+    // Use custom terser config if provided, otherwise use default
+    const terserOptions = terserConfig || { ecma: 5, safari10: true };
+    // @ts-ignore - we know this is compatible with terser options
+    plugins.push(terser(terserOptions));
   }
   const builder = await rollup({
     input: await resolveFilename(module),

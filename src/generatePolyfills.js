@@ -12,13 +12,14 @@ import isSupported from "./isSupported.js";
 const require = createRequire(import.meta.url);
 
 /**
- * @param {{browsers: string[], supports: Record<string, boolean>, minify: boolean}} options
+ * @param {{browsers: string[], supports: Record<string, boolean>, minify: boolean, terserConfig?: Object}} options
  * @returns {Promise<string>} javascript code
  */
 export default async function generatePolyfills({
   browsers,
   supports,
   minify,
+  terserConfig = { ecma: 5, safari10: true },
 }) {
   const folder = await tmpFolder(browsers, supports);
   const file = path.join(folder, `polyfills${minify ? ".min" : ""}.js`);
@@ -206,7 +207,8 @@ if (typeof new Error().stack !== "string") {
   await fs.writeFile(input, source, "utf8");
   const plugins = [commonjs()];
   if (minify) {
-    plugins.push(terser({ ecma: 5, safari10: true }));
+    // @ts-ignore - we know this is compatible with terser options
+    plugins.push(terser(terserConfig));
   }
   const builder = await rollup({ input, plugins, watch: false });
   const result = await builder.write({ format: "iife", file });

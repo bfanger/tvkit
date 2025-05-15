@@ -9,3 +9,5 @@ node_modules
 /test-results
 /user
 .env
+/.idea/
+/terser.json

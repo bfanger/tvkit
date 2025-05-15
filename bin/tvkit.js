@@ -51,6 +51,10 @@ await Yargs(hideBin(process.argv))
         type: "boolean",
         describe: "Toggle minification for polyfills",
       });
+      yargs.option("terser-config", {
+        type: "string",
+        describe: "Path to the JSON terser config file, used for minification",
+      });
     },
     async (argv) => {
       /** @type {Parameters<typeof serve>[4]} */
@@ -71,6 +75,7 @@ await Yargs(hideBin(process.argv))
         {
           css: argv.css,
           minify: argv.minify,
+          terserConfig: argv.terserConfig,
         },
       );
     },
@@ -123,6 +128,10 @@ await Yargs(hideBin(process.argv))
         default: false,
         describe: "Only show error output",
       });
+      yargs.option("terser-config", {
+        type: "string",
+        describe: "Path to the JSON terser config file, used for minification",
+      });
     },
     async (argv) => {
       if (argv.out === "") {
@@ -141,6 +150,7 @@ await Yargs(hideBin(process.argv))
           minify: argv.minify,
           force: argv.force,
           quiet: argv.quiet,
+          terserConfigPath: argv.terserConfig,
         },
       );
     },
