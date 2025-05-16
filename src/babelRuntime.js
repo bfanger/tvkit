@@ -20,8 +20,8 @@ export default async function babelRuntime(
 
   if (minify) {
     // Use custom terser config if provided, otherwise use default
+    /** @type {import("terser").MinifyOptions} */
     const terserOptions = terserConfig || { ecma: 5, safari10: true };
-    // @ts-ignore - we know this is compatible with terser options
     plugins.push(terser(terserOptions));
   }
   const builder = await rollup({

@@ -1,6 +1,6 @@
 // @ts-check
 import fs from "fs/promises";
-import { existsSync, createReadStream, createWriteStream } from "fs";
+import { createReadStream, createWriteStream, existsSync } from "fs";
 import path from "path";
 import zlib from "zlib";
 import * as terser from "terser";
@@ -54,6 +54,7 @@ export default async function build(
   const { publicFolder, justCopy, sveltekit } = await detectPreset(folder);
 
   // Load terser configuration if provided
+  /** @type {import("terser").MinifyOptions} */
   let terserConfig = { ecma: 5, safari10: true };
   if (terserConfigPath) {
     try {
@@ -61,9 +62,8 @@ export default async function build(
         path.resolve(terserConfigPath),
         "utf-8",
       );
-      const parsedConfig = JSON.parse(terserConfigContent);
-      // Merge with default configuration
-      terserConfig = { ...terserConfig, ...parsedConfig };
+
+      terserConfig = JSON.parse(terserConfigContent);
 
       log("[tvkit]", {
         message: `loaded config for terser from ${terserConfigPath}`,
@@ -154,7 +154,7 @@ export default async function build(
 /**
  * @param {string} folder
  * @param {string} out
- * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, terserConfig?: Object, justCopy: boolean | string[], log: (...args:any[]) => void }} options
+ * @param {{base: string, browsers: string[], root: string, css: boolean, minify: boolean, terserConfig?: import("terser").MinifyOptions, justCopy: boolean | string[], log: (...args:any[]) => void }} options
  */
 async function processFolder(
   folder,
@@ -221,7 +221,6 @@ async function processFolder(
               }
               try {
                 // Use custom terser config if provided
-                // @ts-ignore - we know this is compatible with terser options
                 const minified = await terser.minify(code, terserConfig);
                 return minified.code ?? code;
               } catch (/** @type {any} */ err) {

@@ -207,7 +207,6 @@ if (typeof new Error().stack !== "string") {
   await fs.writeFile(input, source, "utf8");
   const plugins = [commonjs()];
   if (minify) {
-    // @ts-ignore - we know this is compatible with terser options
     plugins.push(terser(terserConfig));
   }
   const builder = await rollup({ input, plugins, watch: false });

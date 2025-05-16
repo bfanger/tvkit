@@ -54,19 +54,19 @@ npx tvkit@latest build path/to/build --out path/to/output --browser "chrome 50"
 
 ## tvkit build
 
-| Option         | Default value | Description                                                                 |
-| -------------- | ------------- | --------------------------------------------------------------------------- |
-| [folder]       |               | The folder containing modern javascript                                     |
-| --out          |               | The output folder                                                           |
-| --browser      |               | The transpilation target (uses browserslist)                                |
-| --force        | false         | Overwrite files in output folder                                            |
-| --add          |               | Override feature. Ex `--add "es6-module"` forces adding systemjs polyfill   |
-| --remove       |               | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
-| --no-css       | false         | Disable CSS transpilation                                                   |
-| --no-minify    | false         | Disable minificaton                                                         |
-| --quiet        | false         | Only log errors                                                             |
-| --terser-config|               | Path to the JSON terser config file                                         |
-| --help         |               | Show message per command. Ex: `tvkit build --help`                          |
+| Option           | Default value | Description                                                                 |
+|------------------| ------------- | --------------------------------------------------------------------------- |
+| [folder]         |               | The folder containing modern javascript                                     |
+| --out            |               | The output folder                                                           |
+| --browser        |               | The transpilation target (uses browserslist)                                |
+| --force          | false         | Overwrite files in output folder                                            |
+| --add            |               | Override feature. Ex `--add "es6-module"` forces adding systemjs polyfill   |
+| --remove         |               | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
+| --no-css         | false         | Disable CSS transpilation                                                   |
+| --no-minify      | false         | Disable minificaton                                                         |
+| --quiet          | false         | Only log errors                                                             |
+| --terser-config  |               | Path to the JSON terser config file                                         |
+| --help           |               | Show message per command. Ex: `tvkit build --help`                          |
 
 Note: Polyfilling will degrade the performance for platforms that could've run the modern javascript version.
 An alternative to `tvkit build` is using [@vitejs/plugin-legacy](https://www.npmjs.com/package/@vitejs/plugin-legacy) which has better performance on modern browsers, but doesn't work for some project setups (like SvelteKit projects).
