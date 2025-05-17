@@ -150,7 +150,7 @@ await Yargs(hideBin(process.argv))
           minify: argv.minify,
           force: argv.force,
           quiet: argv.quiet,
-          terserConfigPath: argv.terserConfig,
+          terserConfig: argv.terserConfig,
         },
       );
     },

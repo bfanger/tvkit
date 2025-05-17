@@ -13,19 +13,19 @@ TVKit intercepts requests to a webserver and converts the responses to make them
 
 ## tvkit serve
 
-| Option         | Default value         | Description                                                                 |
-| -------------- | --------------------- | --------------------------------------------------------------------------- |
-| [target]       | http://localhost:5173 | The URL of the website that is too new                                      |
-| --port         | 3000                  | The port the proxy server is going to run on                                |
-| --browser      |                       | The transpilation target (uses browserslist)                                |
-| --add          |                       | Override feature. Ex `--add "es6-module"` forces adding systemjs polyfill   |
-| --remove       |                       | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
-| --no-css       | false                 | Disable CSS transpilation                                                   |
-| --ssl-cert     |                       | Path to the SSL certificate for https                                       |
-| --ssl-key      |                       | Path to the SSL certificate's private key                                   |
-| --no-minify    | false                 | Disable minificaton for the polyfills                                       |
-| --terser-config|                       | Path to the JSON terser config file                                         |
-| --help         |                       | Show message per command. Ex: `tvkit serve --help`                          |
+| Option          | Default value         | Description                                                                 |
+| --------------- | --------------------- | --------------------------------------------------------------------------- |
+| [target]        | http://localhost:5173 | The URL of the website that is too new                                      |
+| --port          | 3000                  | The port the proxy server is going to run on                                |
+| --browser       |                       | The transpilation target (uses browserslist)                                |
+| --add           |                       | Override feature. Ex `--add "es6-module"` forces adding systemjs polyfill   |
+| --remove        |                       | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
+| --no-css        | false                 | Disable CSS transpilation                                                   |
+| --ssl-cert      |                       | Path to the SSL certificate for https                                       |
+| --ssl-key       |                       | Path to the SSL certificate's private key                                   |
+| --no-minify     | false                 | Disable minificaton for the polyfills                                       |
+| --terser-config |                       | Path to the JSON terser config file                                         |
+| --help          |                       | Show message per command. Ex: `tvkit serve --help`                          |
 
 TVKit adds browser aliases for SmartTV platforms:
 Example `--browser "Tizen 5"` is aliased to `Chrome 63`
@@ -54,19 +54,19 @@ npx tvkit@latest build path/to/build --out path/to/output --browser "chrome 50"
 
 ## tvkit build
 
-| Option           | Default value | Description                                                                 |
-|------------------| ------------- | --------------------------------------------------------------------------- |
-| [folder]         |               | The folder containing modern javascript                                     |
-| --out            |               | The output folder                                                           |
-| --browser        |               | The transpilation target (uses browserslist)                                |
-| --force          | false         | Overwrite files in output folder                                            |
-| --add            |               | Override feature. Ex `--add "es6-module"` forces adding systemjs polyfill   |
-| --remove         |               | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
-| --no-css         | false         | Disable CSS transpilation                                                   |
-| --no-minify      | false         | Disable minificaton                                                         |
-| --quiet          | false         | Only log errors                                                             |
-| --terser-config  |               | Path to the JSON terser config file                                         |
-| --help           |               | Show message per command. Ex: `tvkit build --help`                          |
+| Option          | Default value | Description                                                                 |
+| --------------- | ------------- | --------------------------------------------------------------------------- |
+| [folder]        |               | The folder containing modern javascript                                     |
+| --out           |               | The output folder                                                           |
+| --browser       |               | The transpilation target (uses browserslist)                                |
+| --force         | false         | Overwrite files in output folder                                            |
+| --add           |               | Override feature. Ex `--add "es6-module"` forces adding systemjs polyfill   |
+| --remove        |               | Override feature: Ex `--remove fetch` forces omitting whatwg-fetch polyfill |
+| --no-css        | false         | Disable CSS transpilation                                                   |
+| --no-minify     | false         | Disable minificaton                                                         |
+| --quiet         | false         | Only log errors                                                             |
+| --terser-config |               | Path to the JSON terser config file                                         |
+| --help          |               | Show message per command. Ex: `tvkit build --help`                          |
 
 Note: Polyfilling will degrade the performance for platforms that could've run the modern javascript version.
 An alternative to `tvkit build` is using [@vitejs/plugin-legacy](https://www.npmjs.com/package/@vitejs/plugin-legacy) which has better performance on modern browsers, but doesn't work for some project setups (like SvelteKit projects).

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 // @ts-check
 import fs from "fs/promises";
-import path from "path";
 import http from "http";
 import https from "https";
 import express from "express";
@@ -19,6 +18,7 @@ import isSupported, { setOverrides } from "./isSupported.js";
 import cache from "./cache.js";
 import browsersSlug from "./browsersSlug.js";
 import pkg from "./pkg.js";
+import { defaultMinifyOptions, loadTerserConfig } from "./loadTerserConfig.js";
 
 /**
  * Start the proxy server
@@ -27,8 +27,8 @@ import pkg from "./pkg.js";
  * @param {string} target url to proxy
  * @param {string} browser browserslist compatible browser
  * @param {Record<string, boolean>} supports Override features
- * @param {{cert: string, key: string} | false} ssl
- * @param {{css: boolean, minify?: boolean, terserConfigPath?: string}} flags
+ * @param {{cert: string; key: string} | false} ssl
+ * @param {{css: boolean; minify?: boolean; terserConfig?: string}} flags
  */
 export default async function serve(
   port,
@@ -36,35 +36,16 @@ export default async function serve(
   browser,
   supports,
   ssl,
-  { css, minify, terserConfigPath },
+  { css, minify, terserConfig },
 ) {
   const browsers = getBrowsers(browser);
   setOverrides(supports);
 
   minify = minify ?? true;
 
-  // Load terser configuration if provided
-  let terserConfig = { ecma: 5, safari10: true };
-  if (terserConfigPath) {
-    try {
-      const terserConfigPathContent = await fs.readFile(
-        path.resolve(terserConfigPath),
-        "utf-8",
-      );
-      const parsedConfig = JSON.parse(terserConfigPathContent);
-      // Merge with default configuration
-      terserConfig = { ...terserConfig, ...parsedConfig };
-      console.info("[tvkit]", {
-        message: `loaded config for terser from ${terserConfigPath}`,
-        terserConfig,
-      });
-    } catch (/** @type {any} */ error) {
-      //Don't crash in serve, if the config file is not valid JSON or not found
-      console.error(
-        `Error loading terser config from ${terserConfigPath}: ${error.message || String(error)}`,
-      );
-    }
-  }
+  const minifyOptions = terserConfig
+    ? loadTerserConfig(terserConfig)
+    : defaultMinifyOptions;
 
   console.info("[tvkit]", {
     port,
@@ -72,7 +53,7 @@ export default async function serve(
     browsers,
     supports,
     css,
-    minify,
+    minify: minify && terserConfig ? minifyOptions : minify,
     ssl,
   });
 
@@ -81,7 +62,7 @@ export default async function serve(
     browsers,
     supports,
     minify,
-    terserConfig: terserConfig,
+    minifyOptions,
   });
   const slug = browsersSlug(browsers, supports);
 
@@ -257,7 +238,7 @@ export default async function serve(
       babelRuntime(req.url.substring(20, req.url.length - 3), {
         browsers,
         minify,
-        terserConfig,
+        minifyOptions,
       }),
     );
     if (code === req.url) {

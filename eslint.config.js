@@ -30,13 +30,14 @@ export default ts.config(
       "@typescript-eslint/no-unsafe-call": "off",
       "no-console": ["warn", { allow: ["info", "warn", "error"] }],
       "prefer-template": "warn",
+      "object-shorthand": "warn",
     },
   },
   {
     files: ["**/*.cjs"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-var-requires": "off"
+      "@typescript-eslint/no-var-requires": "off",
     },
   },
   {
