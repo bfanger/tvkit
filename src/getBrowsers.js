@@ -3,6 +3,9 @@ import browserslist from "browserslist";
 const aliases = {
   tizen: {
     versions: {
+      9: "chrome 120",
+      8: "chrome 108",
+      7: "chrome 94",
       6.5: "chrome 85",
       6: "chrome 76",
       5.5: "chrome 69",
@@ -13,6 +16,9 @@ const aliases = {
       2.3: "safari 7, chrome 27", // WebKit r152340
     },
     releases: {
+      2025: "9",
+      2024: "8",
+      2023: "7",
       2022: "6.5",
       2021: "6",
       2020: "5.5",
@@ -25,6 +31,9 @@ const aliases = {
   },
   webos: {
     versions: {
+      25: "chrome 120",
+      24: "chrome 108",
+      23: "chrome 94",
       22: "chrome 87",
       6: "chrome 79",
       5: "chrome 68",
@@ -36,6 +45,9 @@ const aliases = {
       1: "safari 7, chrome 27", // WebKit 537.41
     },
     releases: {
+      2025: "25",
+      2024: "24",
+      2023: "23",
       2022: "22",
       2021: "6",
       2020: "5",

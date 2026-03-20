@@ -1,16 +1,15 @@
+// @ts-check
+import { defineConfig } from "eslint/config";
 import "eslint-plugin-only-warn";
-// @ts-ignore
 import js from "@eslint/js";
 import ts from "typescript-eslint";
-// @ts-ignore
 import prettier from "eslint-config-prettier";
 import globals from "globals";
 
-export default ts.config(
+export default defineConfig(
   js.configs.recommended,
   ...ts.configs.recommendedTypeChecked,
   prettier,
-
   {
     languageOptions: {
       ecmaVersion: 2022,

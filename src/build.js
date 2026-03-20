@@ -376,8 +376,9 @@ function patchSvelteKitServer(source, browsers) {
   // Inject polyfills
   code = replaceOrFail(
     code,
-    'let head = "";',
-    "let head = '<script src=\"/tvkit-polyfills.js\"></script>\\n'",
+    "const head = new Head(",
+    `rendered.head = '<script src="/tvkit-polyfills.js"></script>\\n' + rendered.head;
+	const head = new Head(`,
   );
   if (!isSupported("es6-module", browsers)) {
     // Remove modulepreloads
@@ -399,26 +400,57 @@ function patchSvelteKitServer(source, browsers) {
       /then\(\(\[kit, app\]\) => {/gm,
       "then(function (tvkitArgs) { var kit = tvkitArgs[0], app = tvkitArgs[1];",
     );
-    code = replaceOrFail(
-      code,
-      '"data",\n        `form:',
-      '"data: data",\n        `form:',
-    );
+    // For chunked response: https://svelte.dev/docs/kit/load#Streaming-with-promises
     code = replaceOrFail(
       code,
       `defer: (id) => new Promise((fulfil, reject) => {
 							deferred.set(id, { fulfil, reject });
 						})`,
-      `defer: function (id) { return new Promise((fulfil, reject) => {
-        			deferred.set(id, { fulfil: fulfil, reject: reject });
-            })}`,
+      `defer: function (id) { 
+            return new Promise(function (fulfil, reject) {
+							deferred.set(id, { fulfil: fulfil, reject: reject });
+            })
+        }`,
     );
     code = replaceOrFail(
       code,
-      `resolve: ({ id, data, error }) => {
-							const { fulfil, reject } = deferred.get(id);`,
-      `resolve: function (tvkitArgs) { var id = tvkitArgs.id, data = tvkitArgs.data, error = tvkitArgs.error;
-              var tvkitResult = deferred.get(id); var fulfil = tvkitResult.fulfil, reject = tvkitResult.reject;`,
+      `const [data, error] = fn(app);\` : \`const [data, error] = fn();\`;
+			properties.push(\`resolve: async (id, fn) => {
+							\${prelude}
+
+							const try_to_resolve = () => {
+								if (!deferred.has(id)) {
+									setTimeout(try_to_resolve, 0);
+									return;
+								}
+								const { fulfil, reject } = deferred.get(id);
+								deferred.delete(id);
+								if (error) reject(error);
+								else fulfil(data);
+							}
+							try_to_resolve();
+						}`,
+      `var tvkitDataError = fn(app);\` : \`var tvkitDataError = fn();\`; 
+      properties.push(\`resolve: function (id, fn) {
+							\${prelude}
+
+							function try_to_resolve()  {
+								if (!deferred.has(id)) {
+									setTimeout(try_to_resolve, 0);
+									return;
+								}
+								var tvkitFulfilReject = deferred.get(id);
+								deferred.delete(id);
+								if (tvkitDataError[1]) tvkitFulfilReject.reject(tvkitDataError[1]);
+								else tvkitFulfilReject.fulfil(tvkitDataError[0]);
+							}
+							try_to_resolve();
+						}`,
+    );
+    code = replaceOrFail(
+      code,
+      "`(app) => ${str}` : `() => ${str}`",
+      "`function (app) { return ${str}; }` : `function () { return ${str}; }`",
     );
   }
   return code;

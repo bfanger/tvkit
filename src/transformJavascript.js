@@ -44,36 +44,39 @@ export default async function transformJavascript(
       ".insertRule(`@-webkit-keyframes ${",
     );
   }
-  if (!esm) {
-    // Patch Svelte5 (Changing the value of an exported value doesn't work in SystemJS)
+  if (
+    !esm &&
+    code.includes("Node.prototype") &&
+    code.includes("Text.prototype") &&
+    (code.includes(".__click = ") || code.includes(".__click="))
+  ) {
+    // Patch Svelte5 runtime (Changing the value of an exported value doesn't work in SystemJS)
     // Fixes "TypeError: undefined is not a function" at append
+    // Fixes "TypeError: Cannot set properties of undefined (setting 'title')"
     code = code.replace(
-      `var $window;
-var $document;
-var first_child_getter;
-var next_sibling_getter;
+      "function init_operations() {",
+      `var tvkitWindow = false;
+$window = typeof window === "object" ? window : undefined;
+$document = typeof document === "object" ? document : undefined;
 function init_operations() {
-  if ($window !== void 0) {
-    return;
-  }`,
-      `var $window = typeof window === "object" ? window : undefined;
-var $document = typeof document === "object" ? document : undefined;
-var first_child_getter = function () { return this.firstChild; };
-var next_sibling_getter = function () { return this.nextSibling; };
-var tvkitWindow
-function init_operations() {
-  if (tvkitWindow !== void 0) {
-    return;
-  }
-  tvkitWindow = window;`,
+      if (tvkitWindow === false) {
+        tvkitWindow = $window;
+        $window = undefined;
+        tvkit_init_operations(); 
+        $window = tvkitWindow;
+      }
+}
+function tvkit_init_operations() {`,
     );
     if (!isSupported("dom-append", browsers)) {
+      const quote = code.includes("`firstChild`).get") ? "`" : '"';
       code = code.replace(
-        `
-  first_child_getter = get_descriptor(node_prototype, "firstChild").get;
-  next_sibling_getter = get_descriptor(node_prototype, "nextSibling").get;
-`,
-        ``,
+        `${quote}firstChild${quote}).get`,
+        '"firstChild") ? Object.getOwnPropertyDescriptor(Node.prototype, "firstChild").get : (function () { return this.firstChild; })',
+      );
+      code = code.replace(
+        `${quote}nextSibling${quote}).get`,
+        '"nextSibling") ? Object.getOwnPropertyDescriptor(Node.prototype, "nextSibling").get : (function () { return this.nextSibling; })',
       );
     }
   }
