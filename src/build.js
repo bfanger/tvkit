@@ -20,19 +20,20 @@ import { defaultMinifyOptions, loadTerserConfig } from "./loadTerserConfig.js";
  * @param {string} out The output folder
  * @param {string} browser browserslist compatible browser
  * @param {Record<string, boolean>} supports Override features
- * @param {{css: boolean; minify: boolean; force: boolean; quiet: boolean; terserConfig: string | undefined}} flags
+ * @param {{css: boolean; minify: boolean; force: boolean; quiet: boolean; terserConfig: string | undefined; ignore?: string[]}} flags
  * flags.css: Also transform css
  * flags.minify: Minify output
  * flags.force: Overwrite existing output folder
  * flags.quiet: Hide all output that isn't an error or warning
  * flags.terserConfig: Path to a terser config file
+ * flags.ignore: Folders to exclude from processing (relative to input folder)
  */
 export default async function build(
   folder,
   out,
   browser,
   supports,
-  { css, minify, force, quiet, terserConfig },
+  { css, minify, force, quiet, terserConfig, ignore },
 ) {
   if (!force && (await fs.stat(out).catch(() => false))) {
     process.stderr.write(
@@ -52,7 +53,13 @@ export default async function build(
   const browsers = getBrowsers(browser);
   setOverrides(supports);
   const input = path.resolve(folder);
-  const { publicFolder, justCopy, sveltekit } = await detectPreset(folder);
+  const { publicFolder, justCopy: detectedJustCopy, sveltekit } =
+    await detectPreset(folder);
+  const ignorePaths = (ignore || []).map((p) => path.resolve(folder, p));
+  const justCopy =
+    ignorePaths.length > 0
+      ? [...(Array.isArray(detectedJustCopy) ? detectedJustCopy : []), ...ignorePaths]
+      : detectedJustCopy;
 
   const minifyOptions = terserConfig
     ? loadTerserConfig(terserConfig)
@@ -68,6 +75,7 @@ export default async function build(
     css,
     minify: minify && terserConfig ? minifyOptions : minify,
     force,
+    ignoredPaths: justCopy
   });
   const publicPath = path.join(out, publicFolder.substring(1));
 

@@ -132,6 +132,12 @@ await Yargs(hideBin(process.argv))
         type: "string",
         describe: "Path to the JSON terser config file, used for minification",
       });
+      yargs.option("ignore", {
+        type: "array",
+        string: true,
+        describe:
+          "Folders to exclude from processing (just copy). Paths relative to the input folder.",
+      });
     },
     async (argv) => {
       if (argv.out === "") {
@@ -151,6 +157,7 @@ await Yargs(hideBin(process.argv))
           force: argv.force,
           quiet: argv.quiet,
           terserConfig: argv.terserConfig,
+          ignore: argv.ignore,
         },
       );
     },
