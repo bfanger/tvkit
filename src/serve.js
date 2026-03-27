@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 // @ts-check
-import fs from "fs/promises";
-import http from "http";
-import https from "https";
+import fs from "node:fs/promises";
+import http from "node:http";
+import https from "node:https";
 import express from "express";
 import {
   createProxyMiddleware,
@@ -19,6 +19,7 @@ import cache from "./cache.js";
 import browsersSlug from "./browsersSlug.js";
 import pkg from "./pkg.js";
 import { defaultMinifyOptions, loadTerserConfig } from "./loadTerserConfig.js";
+import matchSkipTransform from "./matchSkipTransform.js";
 
 /**
  * Start the proxy server
@@ -28,7 +29,7 @@ import { defaultMinifyOptions, loadTerserConfig } from "./loadTerserConfig.js";
  * @param {string} browser browserslist compatible browser
  * @param {Record<string, boolean>} supports Override features
  * @param {{cert: string; key: string} | false} ssl
- * @param {{css: boolean; minify?: boolean; terserConfig?: string}} flags
+ * @param {{css: boolean; minify?: boolean; terserConfig?: string; skipTransform: string[]}} flags
  */
 export default async function serve(
   port,
@@ -36,8 +37,9 @@ export default async function serve(
   browser,
   supports,
   ssl,
-  { css, minify, terserConfig },
+  { css, minify, terserConfig, skipTransform },
 ) {
+  const origin = `${ssl ? "https" : "http"}://localhost:${port}/`;
   const browsers = getBrowsers(browser);
   setOverrides(supports);
 
@@ -54,6 +56,7 @@ export default async function serve(
     supports,
     css,
     minify: minify && terserConfig ? minifyOptions : minify,
+    skipTransform,
     ssl,
   });
 
@@ -101,6 +104,12 @@ export default async function serve(
           }
           if (res.getHeader("last-modified")) {
             modifiedSince.set(req.url, res.getHeader("last-modified"));
+          }
+          if (req.url) {
+            const { pathname } = new URL(req.url, origin);
+            if (matchSkipTransform(pathname.substring(1), skipTransform)) {
+              return responseBuffer;
+            }
           }
           if (proxyRes.statusCode !== 200) {
             return responseBuffer;
@@ -256,9 +265,7 @@ export default async function serve(
     ? https.createServer(serverOptions, app)
     : http.createServer(app);
   server.listen(port, "0.0.0.0", () => {
-    console.info(
-      `[tvkit] Running on ${ssl ? "https" : "http"}://localhost:${port}/`,
-    );
+    console.info(`[tvkit] Running on ${origin}`);
   });
 }
 

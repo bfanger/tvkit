@@ -55,6 +55,10 @@ await Yargs(hideBin(process.argv))
         type: "string",
         describe: "Path to the JSON terser config file, used for minification",
       });
+      yargs.option("skip-transform", {
+        type: "array",
+        describe: "Serve as-is. Example: '**/*.min.js' 'vendor/**'",
+      });
     },
     async (argv) => {
       /** @type {Parameters<typeof serve>[4]} */
@@ -76,6 +80,7 @@ await Yargs(hideBin(process.argv))
           css: argv.css,
           minify: argv.minify,
           terserConfig: argv.terserConfig,
+          skipTransform: argv["skip-transform"] ?? [],
         },
       );
     },
@@ -132,6 +137,10 @@ await Yargs(hideBin(process.argv))
         type: "string",
         describe: "Path to the JSON terser config file, used for minification",
       });
+      yargs.option("skip-transform", {
+        type: "array",
+        describe: "Copy as-is. Example: '**/*.min.js'",
+      });
     },
     async (argv) => {
       if (argv.out === "") {
@@ -151,6 +160,7 @@ await Yargs(hideBin(process.argv))
           force: argv.force,
           quiet: argv.quiet,
           terserConfig: argv.terserConfig,
+          skipTransform: argv["skip-transform"] ?? [],
         },
       );
     },
