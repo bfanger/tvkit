@@ -1,6 +1,9 @@
-FROM --platform=linux/amd64 debian:10
+FROM debian:10
 
-RUN apt update \
+RUN sed -i 's|http://deb.debian.org|http://archive.debian.org|g' /etc/apt/sources.list \
+    && sed -i 's|http://security.debian.org|http://archive.debian.org|g' /etc/apt/sources.list \
+    && sed -i '/security/d' /etc/apt/sources.list \
+    && apt update \
     && apt install -y \
     unzip \
     sudo \

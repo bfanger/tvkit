@@ -10,7 +10,7 @@ Confusingly the version downloaded from v38 reports Chrome/43 as navigator.userA
 ## Setup (Build the image)
 
 ```sh
-docker build . -t legacy-chrome
+docker build --platform=linux/amd64 . -t legacy-chrome
 ```
 
 ## Run
